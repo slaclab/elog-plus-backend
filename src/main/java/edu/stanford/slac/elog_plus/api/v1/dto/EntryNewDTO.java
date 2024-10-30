@@ -41,7 +41,9 @@ public record EntryNewDTO(
         @Schema(description = "The timestamp when the event is occurred")
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonSerialize(using = LocalDateTimeSerializer.class)
-        LocalDateTime eventAt
+        LocalDateTime eventAt,
+        @Schema(description = "The list user that need to be notify by email")
+        List<String> userIdsToNotify
 ) {
     public EntryNewDTO {
         if (tags == null) tags = Collections.emptyList();

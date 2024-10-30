@@ -31,4 +31,8 @@ public class ELOGAppProperties {
      * The expiration time in hours for the attachments
      */
     private Integer attachmentExpirationMinutes;
+    /**
+     * The URI prefix for the show entry on the UI
+     */
+    private String showEntryExternalLinkPrefix;
 }

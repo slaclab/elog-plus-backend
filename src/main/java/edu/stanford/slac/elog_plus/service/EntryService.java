@@ -2,6 +2,7 @@ package edu.stanford.slac.elog_plus.service;
 
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.PersonDTO;
 import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
+import edu.stanford.slac.ad.eed.baselib.service.PeopleGroupService;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
 import edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper;
 import edu.stanford.slac.elog_plus.api.v1.mapper.QueryParameterMapper;
@@ -42,6 +43,8 @@ public class EntryService {
     final private LogbookService logbookService;
     final private AttachmentService attachmentService;
     final private EntryMapper entryMapper;
+    final private MailService mailService;
+    final private PeopleGroupService peopleGroupService;
 
     /**
      * Return the logbook id for the entry
@@ -170,7 +173,7 @@ public class EntryService {
      * Create a new log entry
      *
      * @param entryNewDTO is a new log information
-     * @param creator    the creator of the new log
+     * @param creator     the creator of the new log
      * @return the id of the newly created log
      */
     public Entry toModelWithCreator(EntryNewDTO entryNewDTO, PersonDTO creator) {
@@ -329,6 +332,21 @@ public class EntryService {
                         "LogService::createNew"
                 );
         log.info("New entry '{}' created", newEntry.getTitle());
+        // send email notification
+        if (newEntry.getUserIdsToNotify() != null && !newEntry.getUserIdsToNotify().isEmpty()) {
+            log.info("Sending email notification for new entry '{}'", newEntry.getTitle());
+
+            // validate the email addresses
+            var peopleList = newEntry.getUserIdsToNotify().stream().map(
+                    peopleGroupService::findPersonByEMail
+            ).toList();
+
+            // send the emails
+            mailService.sentNewEmailNotification(
+                    peopleList,
+                    newEntry
+            );
+        }
         return newEntry.getId();
     }
 

@@ -1,10 +1,7 @@
 package edu.stanford.slac.elog_plus.model;
 
 import lombok.*;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter

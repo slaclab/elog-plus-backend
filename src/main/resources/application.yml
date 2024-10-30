@@ -41,6 +41,8 @@ spring:
       file-size-threshold: 1MB
       max-file-size: ${ELOG_PLUS_MAX_POST_SIZE:100MB}
       max-request-size: ${ELOG_PLUS_MAX_POST_SIZE:100MB}
+  mail:
+    host: ${ELOG_PLUS_MAIL_HOST:smtp.slac.stanford.edu}
 
 edu:
   stanford:
@@ -57,6 +59,7 @@ edu:
           key: ${ELOG_PLUS_MINIO_KEY:minio}
           secret: ${ELOG_PLUS_MINIO_SECRET:minio123}
           bucket: ${ELOG_PLUS_MINIO_BUCKET_NAME:elog}
+        show-entry-external-link-prefix: ${ELOG_PLUS_SHOW_ENTRY_EXTERNAL_LINK_PREFIX:https://accel-webapp-dev.slac.stanford.edu/elog}
 
       ad:
         eed:

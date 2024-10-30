@@ -1,6 +1,10 @@
 package edu.stanford.slac.elog_plus.service;
 
 import com.github.javafaker.Faker;
+import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.spring.GreenMailBean;
+import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.util.ServerSetupTest;
 import edu.stanford.slac.ad.eed.baselib.config.SecurityAuditorAware;
 import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
@@ -14,12 +18,13 @@ import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.repository.AttachmentRepository;
 import edu.stanford.slac.elog_plus.task.CleanUnusedAttachment;
 import edu.stanford.slac.elog_plus.utility.DateUtilities;
+import jakarta.mail.Message;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.api.Condition;
 import org.jsoup.nodes.Element;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.Rule;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +37,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -48,8 +54,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.AssertionsForClassTypes.not;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @AutoConfigureMockMvc
@@ -83,7 +88,20 @@ public class EntryServiceTest {
     private ELOGAppProperties elogAppProperties;
     @SpyBean
     private Clock clock; // Mock the Clock bean
+    @Autowired
+    private JavaMailSender mailSender;
+    private GreenMail greenMail;
 
+    @BeforeAll
+    public void setup() {
+        // Initialize GreenMail on default SMTP port (3025 for tests)
+        greenMail = new GreenMail(ServerSetupTest.SMTP);
+        greenMail.start();
+    }
+    @AfterEach
+    public void tearDown() {
+        greenMail.stop();
+    }
     @BeforeEach
     public void preTest() {
         mongoTemplate.remove(new Query(), Entry.class);
@@ -111,6 +129,9 @@ public class EntryServiceTest {
         } catch (Exception e) {
             throw new RuntimeException("Failed to recreate Kafka topic", e);
         }
+
+        // reset fake mail server
+        greenMail.reset();
     }
 
     private LogbookDTO getTestLogbook() {
@@ -142,6 +163,27 @@ public class EntryServiceTest {
         );
 
         assertThat(newLogID).isNotNull();
+    }
+
+    @Test
+    public void testLogCreationWithEmailNotification() {
+        var logbook = getTestLogbook();
+        String newLogID = entryService.createNew(
+                EntryNewDTO
+                        .builder()
+                        .logbooks(List.of(logbook.id()))
+                        .text("This is a log for test")
+                        .title("A very wonderful log")
+                        .userIdsToNotify(List.of("user2@slac.stanford.edu", "user3@slac.stanford.edu"))
+                        .build(),
+                sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
+        );
+
+        assertThat(newLogID).isNotNull();
+        // check that email has been sent
+        assertThat(greenMail.waitForIncomingEmail(5000, 2)).isTrue();
+        Message[] messages = greenMail.getReceivedMessages();
+        AssertionsForClassTypes.assertThat(messages.length).isEqualTo(2);
     }
 
     @Test

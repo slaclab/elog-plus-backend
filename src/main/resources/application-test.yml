@@ -10,6 +10,17 @@ spring:
     type: none
   hazelcast:
     config: classpath:hazelcast.yaml
+  mail:
+    host: localhost
+    port: 3025
+    username:
+    password:
+    properties:
+        mail:
+            smtp:
+            auth: false
+            starttls:
+                enable: false
 edu:
   stanford:
     slac:

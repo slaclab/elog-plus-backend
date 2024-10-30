@@ -66,6 +66,8 @@ dependencies {
             'org.springframework.boot:spring-boot-starter-data-ldap',
             'org.springframework.boot:spring-boot-starter-cache',
             'org.springframework.boot:spring-boot-starter-validation',
+            'org.springframework.boot:spring-boot-starter-mail',
+            'org.springframework.boot:spring-boot-starter-thymeleaf',
             'io.micrometer:micrometer-registry-prometheus',
             'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0',
             'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0',
@@ -128,7 +130,8 @@ dependencies {
             'org.springframework.security:spring-security-test',
             'org.springframework.ldap:spring-ldap-test',
             'org.awaitility:awaitility:4.2.1',
-            'org.apache.pdfbox:pdfbox:3.0.3'
+            'org.apache.pdfbox:pdfbox:3.0.3',
+            'com.icegreen:greenmail-spring:2.0.1'
 
 }
 

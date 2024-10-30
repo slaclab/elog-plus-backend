@@ -62,6 +62,10 @@ public class Entry {
     @Indexed
     private LocalDateTime eventAt;
     /**
+     * The list of user IDs that need to be notified by email when the entry is created.
+     */
+    private List<String> userIdsToNotify;
+    /**
      * The date and time when the activity was created.
      * This field is automatically populated with the creation date and time, using @CreatedDate annotation.
      */
