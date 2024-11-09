@@ -10,6 +10,15 @@ hazelcast:
     # If you allow the Jet jobs, think twice before allowing custom code upload to the cluster!
     # The default value is false already so this one is just to be sure and explicit.
     resource-upload-enabled: false
+  map:
+    tags:
+      time-to-live-seconds: 3600
+      max-idle-seconds: 3600
+      in-memory-format: BINARY
+    logbooks:
+        time-to-live-seconds: 3600
+        max-idle-seconds: 3600
+        in-memory-format: BINARY
   cache:
     default:
       statistics-enabled: true

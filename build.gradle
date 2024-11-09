@@ -106,7 +106,7 @@ dependencies {
                     "edu.stanford.slac:slac-ad-eed-base-mongodb-lib:$project.ext.ad_eed_base_mongodb_lib_version"
 
     // hazelcast
-    implementation 'com.hazelcast:hazelcast-spring:5.3.8'
+    implementation 'com.hazelcast:hazelcast-spring:5.3.6'
 
     // MongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'

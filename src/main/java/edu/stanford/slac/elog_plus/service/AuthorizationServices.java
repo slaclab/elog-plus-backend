@@ -13,6 +13,7 @@ import edu.stanford.slac.elog_plus.api.v1.dto.NewAuthorizationDTO;
 import edu.stanford.slac.elog_plus.api.v1.mapper.AuthorizationMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -266,6 +267,7 @@ public class AuthorizationServices {
      *
      * @param newAuthorizationDTO the new authorization to create
      */
+    @CacheEvict(value = "logbooks", allEntries = true)
     public void createNew(NewAuthorizationDTO newAuthorizationDTO) {
         // check the resourceType type
         String resource = getResource(newAuthorizationDTO);
@@ -359,6 +361,7 @@ public class AuthorizationServices {
      *
      * @param authorizationId the id of the authorization to delete
      */
+    @CacheEvict(value = "logbooks", allEntries = true)
     public void deleteAuthorization(String authorizationId) {
         var authorizationFound = authService.findAuthorizationById(authorizationId);
         log.info("Deleting authorization {} by {}", authorizationFound, getCurrentUsername());
@@ -372,6 +375,7 @@ public class AuthorizationServices {
      * @param updateAuthorizationDTO the update information
      */
     @Transactional
+    @CacheEvict(value = "logbooks", allEntries = true)
     public void updateAuthorization(String authorizationId, UpdateAuthorizationDTO updateAuthorizationDTO) {
         var authorizationFound = authService.findAuthorizationById(authorizationId);
         authService.updateAuthorizationType(authorizationId, updateAuthorizationDTO.permission());

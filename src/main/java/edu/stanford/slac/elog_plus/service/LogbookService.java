@@ -24,6 +24,8 @@ import edu.stanford.slac.elog_plus.utility.StringUtilities;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -138,6 +140,7 @@ public class LogbookService {
      * @param newLogbookDTO the new logbooks
      * @return the id of the newly created logbooks
      */
+//    @CacheEvict(value = "logbooks", allEntries = true)
     public String createNew(NewLogbookDTO newLogbookDTO) {
         // normalize the name
         newLogbookDTO = newLogbookDTO.toBuilder()
@@ -180,6 +183,7 @@ public class LogbookService {
      * @param logbookDTO the updated logbooks
      */
     @Transactional
+//    @CacheEvict(value = "logbooks", allEntries = true)
     public LogbookDTO update(String logbookId, UpdateLogbookDTO logbookDTO) {
         // check if id exists
         Logbook lbToUpdated = wrapCatch(
@@ -453,6 +457,7 @@ public class LogbookService {
      * @param logbookId the logbooks id
      * @return the full logbooks
      */
+//    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId +'_'+ #includeAuthorizations.orElse(false)")
     public LogbookDTO getLogbook(String logbookId, Optional<Boolean> includeAuthorizations) {
         return wrapCatch(
                 () -> logbookRepository.findById(
@@ -479,6 +484,7 @@ public class LogbookService {
      * @param logbookName the name of the logbooks
      * @return the full logbooks
      */
+//    @Cacheable(value = "logbooks", key = "'getLogbookByName-' + #logbookName")
     public LogbookDTO getLogbookByName(@NotNull String logbookName) {
         Optional<Logbook> lb = wrapCatch(
                 () -> logbookRepository.findByName(logbookName.toLowerCase()),
@@ -502,6 +508,7 @@ public class LogbookService {
      * @param logbookName the name of the logbooks to check
      * @return true if the logbooks exists
      */
+//    @Cacheable(value = "logbooks", key = "'existByName-' + #logbookName")
     public Boolean existByName(@NotNull String logbookName) {
         return wrapCatch(
                 () -> logbookRepository.existsByName(
@@ -517,6 +524,7 @@ public class LogbookService {
      * @param logbookId the id of the logbooks to check
      * @return true if the logbooks exists
      */
+//    @Cacheable(value = "logbooks", key = "'existById-' + #logbookId")
     public Boolean existById(String logbookId) {
         return wrapCatch(
                 () -> logbookRepository.existsById(
@@ -728,6 +736,7 @@ public class LogbookService {
      * @param allNewShift all the new shift
      */
     @Transactional()
+//    @CacheEvict(value = "logbooks", allEntries = true)
     public void replaceShift(String logbookId, List<ShiftDTO> allNewShift) {
         Optional<Logbook> lb =
                 wrapCatch(
@@ -933,6 +942,7 @@ public class LogbookService {
      * @param logbookIds the logbooks where search the id
      * @return true if the tag exists
      */
+    @Cacheable(value = "tags", key = "#tagId + '_' + #logbookIds.hashCode()")
     public boolean tagIdExistInAnyLogbookIds(String tagId, List<String> logbookIds) {
         return wrapCatch(
                 () -> logbookRepository.existsByIdInAndTagsIdIs(
@@ -944,6 +954,7 @@ public class LogbookService {
         );
     }
 
+    @Cacheable(value = "tags", key = "#tagId")
     public Optional<TagDTO> getTagById(String tagId) {
         Optional<Tag> tag = wrapCatch(
                 () -> logbookRepository.getTagsByID(

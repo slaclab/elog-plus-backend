@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.annotation.DirtiesContext;
@@ -25,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
@@ -50,6 +52,8 @@ public class LogbooksControllerTest {
     private MongoTemplate mongoTemplate;
     @Autowired
     private TestControllerHelperService testControllerHelperService;
+    @Autowired
+    private CacheManager cacheManager;
 
     @BeforeEach
     public void preTest() {
@@ -60,6 +64,8 @@ public class LogbooksControllerTest {
         appProperties.getRootUserList().clear();
         appProperties.getRootUserList().add("user1@slac.stanford.edu");
         authService.updateRootUser();
+
+        cacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
     }
 
     @Test
@@ -458,9 +464,7 @@ public class LogbooksControllerTest {
                 () -> testControllerHelperService.createNewLogbook(
                         mockMvc,
                         status().isCreated(),
-                        Optional.of(
-                                "user1@slac.stanford.edu"
-                        ),
+                        Optional.of("user1@slac.stanford.edu"),
                         NewLogbookDTO.builder()
                                 .name("new-logbooks")
                                 .build()
@@ -470,6 +474,33 @@ public class LogbooksControllerTest {
         assertThat(creationResult).isNotNull();
         assertThat(creationResult.getErrorCode()).isEqualTo(0);
         assertThat(creationResult.getPayload()).isNotEmpty();
+
+        // get the full logbook
+        ApiResultResponse<LogbookDTO> fullLogbook = assertDoesNotThrow(
+                () -> testControllerHelperService.getLogbookByID(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        creationResult.getPayload()
+                )
+        );
+        fullLogbook = assertDoesNotThrow(
+                () -> testControllerHelperService.getLogbookByID(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        creationResult.getPayload()
+                )
+        );
+        assertThat(fullLogbook).isNotNull();
+        assertThat(fullLogbook.getErrorCode()).isEqualTo(0);
+        assertThat(fullLogbook.getPayload().name()).isEqualTo("new-logbooks");
+        assertThat(fullLogbook.getPayload().tags()).isEmpty();
+        assertThat(fullLogbook.getPayload().shifts()).isEmpty();
+        assertThat(fullLogbook.getPayload().readAll()).isFalse();
+        assertThat(fullLogbook.getPayload().writeAll()).isFalse();
+
+
 
         ApiResultResponse<Boolean> replacementResult = assertDoesNotThrow(
                 () -> testControllerHelperService.updateLogbook(
@@ -504,7 +535,7 @@ public class LogbooksControllerTest {
         assertThat(replacementResult).isNotNull();
         assertThat(replacementResult.getErrorCode()).isEqualTo(0);
 
-        ApiResultResponse<LogbookDTO> fullLogbook = assertDoesNotThrow(
+        ApiResultResponse<LogbookDTO> fullLogbookUpdated = assertDoesNotThrow(
                 () -> testControllerHelperService.getLogbookByID(
                         mockMvc,
                         status().isOk(),
@@ -514,10 +545,10 @@ public class LogbooksControllerTest {
                         creationResult.getPayload()
                 )
         );
-        assertThat(fullLogbook.getErrorCode()).isEqualTo(0);
-        assertThat(fullLogbook.getPayload().name()).isEqualTo("updated-name");
-        assertThat(fullLogbook.getPayload().tags()).hasSize(1).extracting("name").contains("tag-1");
-        assertThat(fullLogbook.getPayload().shifts()).hasSize(1).extracting("name").contains("Shift A");
+        assertThat(fullLogbookUpdated.getErrorCode()).isEqualTo(0);
+        assertThat(fullLogbookUpdated.getPayload().name()).isEqualTo("updated-name");
+        assertThat(fullLogbookUpdated.getPayload().tags()).hasSize(1).extracting("name").contains("tag-1");
+        assertThat(fullLogbookUpdated.getPayload().shifts()).hasSize(1).extracting("name").contains("Shift A");
     }
 
     @Test

@@ -816,6 +816,15 @@ public class EntryServiceTest {
     @Test
     public void searchLogsByAnchor() {
         var logbook = getTestLogbook();
+
+        // add tags to the logbook
+        var tagId = assertDoesNotThrow(
+                () -> logbookService.ensureTag(
+                        logbook.id(),
+                        "tag1"
+                )
+        );
+
         String anchorID = null;
         // create some data
         for (int idx = 0; idx < 100; idx++) {
@@ -829,6 +838,11 @@ public class EntryServiceTest {
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
+                                            .tags(
+                                                    List.of(
+                                                            tagId
+                                                    )
+                                            )
                                             .build(),
                                     sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
                             )

@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.annotation.DirtiesContext;
@@ -30,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationTypeDTO.*;
@@ -56,7 +58,9 @@ public class LogbookControllerAuthTest {
     @Autowired
     private TestControllerHelperService testControllerHelperService;
     @Autowired
-    AdminClient adminClient;
+    private AdminClient adminClient;
+    @Autowired
+    private CacheManager cacheManager;
 
     @BeforeEach
     public void preTest() {
@@ -70,6 +74,12 @@ public class LogbookControllerAuthTest {
         appProperties.getRootUserList().clear();
         appProperties.getRootUserList().add("user1@slac.stanford.edu");
         authService.updateRootUser();
+
+        clearCache();
+    }
+
+    private void clearCache() {
+        cacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
     }
 
     @Test
@@ -504,6 +514,7 @@ public class LogbookControllerAuthTest {
                 .contains("user1@slac.stanford.edu", groupIdResult.getPayload());
 
         // remove authorization for all user
+        clearCache();
         authService.deleteAuthorizationForResourcePrefix("/logbook/%s".formatted(newLogbookResult.getPayload()), AuthorizationOwnerTypeDTO.User);
 
         logbook = assertDoesNotThrow(
@@ -521,6 +532,7 @@ public class LogbookControllerAuthTest {
                 .hasSize(1);
 
         // remove authorization for group
+        clearCache();
         authService.deleteAuthorizationForResourcePrefix("/logbook/%s".formatted(newLogbookResult.getPayload()), AuthorizationOwnerTypeDTO.Group);
         // check
         logbook = assertDoesNotThrow(
