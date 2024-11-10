@@ -1,6 +1,7 @@
 package edu.stanford.slac.elog_plus.repository;
 
 import edu.stanford.slac.elog_plus.model.Logbook;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -17,6 +18,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param id the id of the logbook
      * @return true if the logbook exists, false otherwise
      */
+    @Cacheable(value = "logbooks", key = "'exists_by_id_'+#id")
     boolean existsById(String id);
 
     /**
@@ -25,6 +27,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param name the name of the logbook
      * @return true if the logbook exists, false otherwise
      */
+    @Cacheable(value = "logbooks", key = "'exists_by_name'+#name")
     boolean existsByName(String name);
 
     /**
@@ -33,6 +36,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param logbookName the name of the logbook
      * @return the logbook if it exists
      */
+    @Cacheable(value = "logbooks", key = "'find_by_name'+#name")
     Optional<Logbook> findByName(String logbookName);
 
     /**
@@ -41,6 +45,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param logbookIds the ids of the logbook
      * @return the logbook if it exists
      */
+    @Cacheable(value = "logbooks", key = "'t_id_'+#tagId + '_logbooks_' + T(java.lang.String).join(',', #logbookIds)")
     boolean existsByIdInAndTagsIdIs(List<String> logbookIds, String tagId);
 
     /**
@@ -49,6 +54,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param tagId the ids of the logbook
      * @return the logbook if it exists
      */
+    @Cacheable(value = "logbooks", key = "'by_tag_id'+#tagId")
     Optional<Logbook> findByTagsIdIs(String tagId);
 
     /**

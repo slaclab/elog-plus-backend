@@ -140,7 +140,7 @@ public class LogbookService {
      * @param newLogbookDTO the new logbooks
      * @return the id of the newly created logbooks
      */
-//    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
     public String createNew(NewLogbookDTO newLogbookDTO) {
         // normalize the name
         newLogbookDTO = newLogbookDTO.toBuilder()
@@ -183,7 +183,7 @@ public class LogbookService {
      * @param logbookDTO the updated logbooks
      */
     @Transactional
-//    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
     public LogbookDTO update(String logbookId, UpdateLogbookDTO logbookDTO) {
         // check if id exists
         Logbook lbToUpdated = wrapCatch(
@@ -457,7 +457,7 @@ public class LogbookService {
      * @param logbookId the logbooks id
      * @return the full logbooks
      */
-//    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId +'_'+ #includeAuthorizations.orElse(false)")
+    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId +'_'+ #includeAuthorizations.orElse(false)")
     public LogbookDTO getLogbook(String logbookId, Optional<Boolean> includeAuthorizations) {
         return wrapCatch(
                 () -> logbookRepository.findById(
@@ -484,7 +484,6 @@ public class LogbookService {
      * @param logbookName the name of the logbooks
      * @return the full logbooks
      */
-//    @Cacheable(value = "logbooks", key = "'getLogbookByName-' + #logbookName")
     public LogbookDTO getLogbookByName(@NotNull String logbookName) {
         Optional<Logbook> lb = wrapCatch(
                 () -> logbookRepository.findByName(logbookName.toLowerCase()),
@@ -508,7 +507,6 @@ public class LogbookService {
      * @param logbookName the name of the logbooks to check
      * @return true if the logbooks exists
      */
-//    @Cacheable(value = "logbooks", key = "'existByName-' + #logbookName")
     public Boolean existByName(@NotNull String logbookName) {
         return wrapCatch(
                 () -> logbookRepository.existsByName(
@@ -524,7 +522,6 @@ public class LogbookService {
      * @param logbookId the id of the logbooks to check
      * @return true if the logbooks exists
      */
-//    @Cacheable(value = "logbooks", key = "'existById-' + #logbookId")
     public Boolean existById(String logbookId) {
         return wrapCatch(
                 () -> logbookRepository.existsById(
@@ -610,6 +607,7 @@ public class LogbookService {
      * @param tagName   the name of the tag
      * @return true if the tag exists
      */
+    @Cacheable(value = "tags", key = "'tagExistForLogbook-' + #logbookId + '_' + #tagName")
     public Boolean tagExistForLogbook(String logbookId, String tagName) {
         return wrapCatch(
                 () -> logbookRepository.tagExistByName(
@@ -703,6 +701,12 @@ public class LogbookService {
         return result;
     }
 
+    /**
+     * Return all tags for the logbooks
+     *
+     * @param logbookIds the ids of the logbooks
+     * @return all the tags
+     */
     public List<TagDTO> getAllTagsByLogbooksIds(List<String> logbookIds) {
         List<TagDTO> result = new ArrayList<>();
 
@@ -736,7 +740,7 @@ public class LogbookService {
      * @param allNewShift all the new shift
      */
     @Transactional()
-//    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
     public void replaceShift(String logbookId, List<ShiftDTO> allNewShift) {
         Optional<Logbook> lb =
                 wrapCatch(
@@ -780,6 +784,7 @@ public class LogbookService {
      * @param newShiftDTO the shift description
      */
     @Transactional(propagation = Propagation.NESTED)
+    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
     public String addShift(String logbookId, NewShiftDTO newShiftDTO) {
         // validate the shift
         Shift shiftToAdd = validateShift(shiftMapper.fromDTO(newShiftDTO), -1, "LogbookService:addShift");
@@ -942,7 +947,6 @@ public class LogbookService {
      * @param logbookIds the logbooks where search the id
      * @return true if the tag exists
      */
-    @Cacheable(value = "tags", key = "#tagId + '_' + #logbookIds.hashCode()")
     public boolean tagIdExistInAnyLogbookIds(String tagId, List<String> logbookIds) {
         return wrapCatch(
                 () -> logbookRepository.existsByIdInAndTagsIdIs(
@@ -954,7 +958,6 @@ public class LogbookService {
         );
     }
 
-    @Cacheable(value = "tags", key = "#tagId")
     public Optional<TagDTO> getTagById(String tagId) {
         Optional<Tag> tag = wrapCatch(
                 () -> logbookRepository.getTagsByID(

@@ -5,6 +5,7 @@ import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.model.Shift;
 import edu.stanford.slac.elog_plus.model.Tag;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -232,10 +233,11 @@ public class LogbookRepositoryImpl implements LogbookRepositoryCustom {
     }
 
     @Override
-    public Optional<Tag> getTagsByID(String tagsId) {
+    @Cacheable(value = "tags", key = "'by_id_'+#tagId")
+    public Optional<Tag> getTagsByID(String tagId) {
         Query q = new Query();
         q.addCriteria(
-                Criteria.where("tags.id").is(tagsId)
+                Criteria.where("tags.id").is(tagId)
         );
         q.fields().include("tags");
         Logbook l = mongoTemplate.findOne(q, Logbook.class);
@@ -243,7 +245,7 @@ public class LogbookRepositoryImpl implements LogbookRepositoryCustom {
             return l.getTags()
                     .stream()
                     .filter(
-                            t-> t.getId().compareTo(tagsId)==0
+                            t-> t.getId().compareTo(tagId)==0
                     )
                     .findFirst();
         } else {
