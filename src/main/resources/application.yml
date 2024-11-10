@@ -1,7 +1,10 @@
 logging:
   level:
-    edu.stanford.slac.elog_plus: ${ELOG_PLUS_LOG_LEVEL:debug}
-    org.springframework.data.mongodb.core.MongoTemplate: ${ELOG_PLUS_LOG_LEVEL:debug}
+    edu.stanford.slac.elog_plus: ${ELOG_PLUS_LOG_LEVEL:info}
+    org.springframework.data.mongodb.core.MongoTemplate: ${ELOG_PLUS_MONGODB_LOG_LEVEL:info}
+    org.springframework.cache: ${ELOG_PLUS_CACHE_LOG_LEVEL:trace}
+    org.apache.kafka: ${ELOG_PLUS_KAFKA_LOG_LEVEL:error}
+    om.hazelcast: TRACE
 server:
   tomcat:
     mbeanregistry:

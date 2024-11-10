@@ -3,6 +3,9 @@ hazelcast:
   instance-name: elog-cache-instance
   metrics:
     enabled: true
+    jmx:
+      enabled: true
+    collection-frequency-seconds: 5
   jet:
     # Keep the Jet stream/batch processing engine disabled if you don't need it.
     # The default value is false already so this one is just to be sure and explicit.
