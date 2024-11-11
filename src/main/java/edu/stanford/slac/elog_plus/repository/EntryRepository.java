@@ -1,6 +1,7 @@
 package edu.stanford.slac.elog_plus.repository;
 
 import edu.stanford.slac.elog_plus.model.Entry;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -34,9 +35,10 @@ public interface EntryRepository extends MongoRepository<Entry, String>, EntryRe
     /**
      * Return the entries that refer to another entry
      * @param referencedEntryId the id of the referenced entry
-     * @param exists if false take in consideration only the last superseeded entry
+     * @param exists if false take in consideration only the last superseded entry
      * @return the entries that are associated to the logbook
      */
+    @Cacheable(value = "entries", key = "#referencedEntryId + '_' + #exists")
     List<Entry> findAllByReferencesContainsAndSupersededByExists(String referencedEntryId, Boolean exists);
 
     /**

@@ -22,6 +22,10 @@ hazelcast:
         time-to-live-seconds: 3600
         max-idle-seconds: 3600
         in-memory-format: BINARY
+    entries:
+      time-to-live-seconds: 3600
+      max-idle-seconds: 3600
+      in-memory-format: BINARY
   cache:
     default:
       statistics-enabled: true

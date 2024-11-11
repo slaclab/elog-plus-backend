@@ -1,6 +1,7 @@
 package edu.stanford.slac.elog_plus.repository;
 
 import edu.stanford.slac.elog_plus.model.Logbook;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -12,6 +13,13 @@ import java.util.Optional;
  * Repository for the logbooks managements
  */
 public interface LogbookRepository extends MongoRepository<Logbook, String>, LogbookRepositoryCustom{
+
+
+    @NotNull
+    @Override
+    @Cacheable(value = "logbooks", key = "#id")
+    Optional<Logbook> findById(@NotNull String id);
+
     /**
      * Check if a logbook exists by its id
      *
