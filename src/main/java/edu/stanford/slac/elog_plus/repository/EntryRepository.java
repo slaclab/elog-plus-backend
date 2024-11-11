@@ -14,6 +14,12 @@ import java.util.Optional;
 public interface EntryRepository extends MongoRepository<Entry, String>, EntryRepositoryCustom {
     List<Entry> findAllByIdIn(List<String> ids);
 
+    /**
+     * Return the entry that is a superseded by the one identified by id
+     * @param id the id of the entry
+     * @return the entries that are associated to the logbook
+     */
+    @Cacheable(value = "entries", key = "'returnSupersededBy_'+#id")
     Optional<Entry> findBySupersededBy(String id);
 
     /**
@@ -21,6 +27,7 @@ public interface EntryRepository extends MongoRepository<Entry, String>, EntryRe
      * @param id the id of the followup record
      * @return the following up record
      */
+    @Cacheable(value = "entries", key = "'returnFollowedBy_'+#id")
     Optional<Entry> findByFollowUpsContainsAndSupersededByIsNull(String id);
 
     /**
@@ -38,7 +45,7 @@ public interface EntryRepository extends MongoRepository<Entry, String>, EntryRe
      * @param exists if false take in consideration only the last superseded entry
      * @return the entries that are associated to the logbook
      */
-    @Cacheable(value = "entries", key = "#referencedEntryId + '_' + #exists")
+    @Cacheable(value = "entries", key = "'findAllByreferenced'+#referencedEntryId + '_' + #exists")
     List<Entry> findAllByReferencesContainsAndSupersededByExists(String referencedEntryId, Boolean exists);
 
     /**

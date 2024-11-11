@@ -17,6 +17,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -602,6 +603,7 @@ public class EntryService {
      * @return the id of the new supersede log
      */
     @Transactional
+    @CacheEvict(value = "entries", allEntries = true)
     public String createNewSupersede(String entryId, EntryNewDTO newLog, PersonDTO creator) {
         // fetches the log to supersede
         Entry supersededLog =
@@ -708,6 +710,7 @@ public class EntryService {
      * @return the id of the new follow-up log
      */
     @Transactional
+    @CacheEvict(value = "entries", allEntries = true)
     public String createNewFollowUp(String id, EntryNewDTO newLog, PersonDTO personDTO) {
         Entry rootLog =
                 wrapCatch(

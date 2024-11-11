@@ -13,11 +13,17 @@ import java.util.List;
 public interface AttachmentRepository  extends MongoRepository<Attachment, String>, AttachmentRepositoryCustom {
     /**
      * Check if an attachment exists if the attachment cannot be deleted
-     * @param id
+     * @param id the id of the attachment
      * @return
      */
     boolean existsByIdAndCanBeDeletedIsFalse(String id);
+    /**
+     * Find all the attachment that are associated to a reference
+     * @param referenceId the id of the reference
+     * @return the list of the attachment
+     */
     List<Attachment> findAllByReferenceInfo(String referenceId);
+
     // delete all attachment that are expired since some minutes
     void deleteByCreatedDateLessThanAndInUseIsFalse(LocalDateTime expirationTime);
 }
