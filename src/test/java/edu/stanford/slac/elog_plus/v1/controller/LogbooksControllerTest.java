@@ -112,7 +112,7 @@ public class LogbooksControllerTest {
                 NotAuthorized.class,
                 () -> testControllerHelperService.createNewLogbook(
                         mockMvc,
-                        status().isUnauthorized(),
+                        status().isForbidden(),
                         Optional.of(
                                 "user3@slac.stanford.edu"
                         ),

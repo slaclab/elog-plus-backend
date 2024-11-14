@@ -115,7 +115,7 @@ public class EntriesControllerAuthorizationTest {
                         NotAuthorized.class,
                         () -> testControllerHelperService.createNewLog(
                                 mockMvc,
-                                status().isUnauthorized(),
+                                status().isForbidden(),
                                 Optional.of(
                                         "user2@slac.stanford.edu"
                                 ),
@@ -160,7 +160,7 @@ public class EntriesControllerAuthorizationTest {
                         NotAuthorized.class,
                         () -> testControllerHelperService.createNewLog(
                                 mockMvc,
-                                status().isUnauthorized(),
+                                status().isForbidden(),
                                 Optional.of(
                                         "user3@slac.stanford.edu"
                                 ),
