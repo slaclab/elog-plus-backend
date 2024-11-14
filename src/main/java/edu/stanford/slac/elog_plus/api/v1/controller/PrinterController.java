@@ -68,6 +68,7 @@ public class PrinterController {
                     String logbook = printerService.getLogbookDestination(data);
                     log.info("Printing to logbook {}", logbook);
                     fullLogbook = logbookService.getLogbookByName(logbook);
+                    log.info("Fetch authorization on logbook {} with id {}", logbook, fullLogbook.id());
                     authorized = authService.checkAuthorizationForOwnerAuthTypeAndResourcePrefix(
                             authentication,
                             Write,
@@ -75,8 +76,10 @@ public class PrinterController {
                     );
                 }
                 if (!authorized) {
+                    log.error("Not authorized to print to logbook {}", fullLogbook);
                     response = new IppPacketData(printerService.createErrorResponsePacket(data.getPacket(), Status.clientErrorNotAuthorized));
                 } else {
+                    log.info("Handling IPP packet");
                     response = printerService.handleIppPacket(data, fullLogbook);
                 }
             }
