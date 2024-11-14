@@ -44,7 +44,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param logbookName the name of the logbook
      * @return the logbook if it exists
      */
-    @Cacheable(value = "logbooks", key = "'find_by_name'+#name")
+    @Cacheable(value = "logbooks", key = "'find_by_name'+#logbookName")
     Optional<Logbook> findByName(String logbookName);
 
     /**
