@@ -31,9 +31,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.hp.jipp.encoding.Tag.*;
 import static io.jsonwebtoken.lang.Collections.emptyList;
+import static io.jsonwebtoken.lang.Collections.emptySet;
 
 @Log4j2
 @Service
@@ -289,7 +291,7 @@ public class PrinterService {
         }
 
         // create entry
-        createEntry(requestPacket, logbookDTO, null, List.of(attachmentId));
+        createEntry(requestPacket, logbookDTO, null, Set.of(attachmentId));
     }
 
     /**
@@ -314,7 +316,7 @@ public class PrinterService {
                     .build();
         }
         // create entry
-        createEntry(requestPacket, logbookDTO, null, List.of(attachmentId));
+        createEntry(requestPacket, logbookDTO, null, Set.of(attachmentId));
     }
 
 
@@ -335,7 +337,7 @@ public class PrinterService {
         while ((line = reader.readLine()) != null) {
             documentContent.append(line).append("\n");
         }
-        createEntry(requestPacket, logbookDTO, documentContent, emptyList());
+        createEntry(requestPacket, logbookDTO, documentContent, emptySet());
     }
 
 
@@ -347,7 +349,7 @@ public class PrinterService {
      * @param documentContent The document content
      * @throws IOException If an error occurs
      */
-    private void createEntry(IppPacket requestPacket, LogbookDTO logbookDTO, StringBuilder documentContent, List<String> attachmentId) throws IOException {
+    private void createEntry(IppPacket requestPacket, LogbookDTO logbookDTO, StringBuilder documentContent, Set<String> attachmentId) throws IOException {
         String documentFileName = getFileName(requestPacket);
         PersonDTO creator = null;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -364,7 +366,7 @@ public class PrinterService {
         }
         entryService.createNew(
                 EntryNewDTO.builder()
-                        .logbooks(Collections.singletonList(logbookDTO.id()))
+                        .logbooks(Set.of(logbookDTO.id()))
                         .title(documentFileName == null ? "Printed Text Document" : documentFileName)
                         .text((documentContent != null && !documentContent.isEmpty()) ? documentContent.toString() : "")
                         .attachments(attachmentId)

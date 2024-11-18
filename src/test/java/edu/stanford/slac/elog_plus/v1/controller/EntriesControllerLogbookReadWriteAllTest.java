@@ -38,6 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -171,9 +172,7 @@ public class EntriesControllerLogbookReadWriteAllTest {
                                 Optional.of("user1@slac.stanford.edu"),
                                 EntryNewDTO
                                         .builder()
-                                        .logbooks(
-                                                List.of(newLogbookApiResultThreeReadAll.getPayload())
-                                        )
+                                        .logbooks(Set.of(newLogbookApiResultThreeReadAll.getPayload()))
                                         .text("This is a log for test")
                                         .title("A very wonderful log")
                                         .build()
@@ -213,9 +212,7 @@ public class EntriesControllerLogbookReadWriteAllTest {
                                 Optional.of("user2@slac.stanford.edu"),
                                 EntryNewDTO
                                         .builder()
-                                        .logbooks(
-                                                List.of(newLogbookApiResultTwoWriteAll.getPayload())
-                                        )
+                                        .logbooks(Set.of(newLogbookApiResultTwoWriteAll.getPayload()))
                                         .text("This is a log for test by user 2")
                                         .title("A very wonderful log")
                                         .build()
@@ -230,9 +227,7 @@ public class EntriesControllerLogbookReadWriteAllTest {
                                 Optional.of("user3@slac.stanford.edu"),
                                 EntryNewDTO
                                         .builder()
-                                        .logbooks(
-                                                List.of(newLogbookApiResultTwoWriteAll.getPayload())
-                                        )
+                                        .logbooks(Set.of(newLogbookApiResultTwoWriteAll.getPayload()))
                                         .text("This is a log for test by user 3")
                                         .title("A very wonderful log")
                                         .build()
@@ -261,12 +256,8 @@ public class EntriesControllerLogbookReadWriteAllTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(
-                                                    List.of(
-                                                            logbookId
-                                                    )
-                                            )
-                                            .tags(emptyList())
+                                            .logbooks(Set.of( logbookId ))
+                                            .tags(emptySet())
                                             .text(String.format("This is a log for test %d in logbook %s", finalI, logbookId))
                                             .title("Another very wonderful logbook 1 and 2")
                                             .build()
@@ -354,12 +345,8 @@ public class EntriesControllerLogbookReadWriteAllTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(
-                                                    List.of(
-                                                            newLogbookApiResultOne.getPayload()
-                                                    )
-                                            )
-                                            .tags(emptyList())
+                                            .logbooks(Set.of(newLogbookApiResultOne.getPayload()))
+                                            .tags(emptySet())
                                             .text(String.format("This is a log for test %d in logbook %s", finalI,  newLogbookApiResultOne.getPayload()))
                                             .title("Another very wonderful logbook 1 and 2")
                                             .build()

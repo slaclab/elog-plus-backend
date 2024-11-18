@@ -14,6 +14,7 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,7 +23,7 @@ import java.util.List;
 public record EntryNewDTO(
         @NotNull
         @Schema(description = "Is the logbooks where the new log belong")
-        List<String> logbooks,
+        Set<String> logbooks,
         @NotNull
         @NotEmpty
         @Schema(description = "The title of the log")
@@ -33,9 +34,9 @@ public record EntryNewDTO(
         @Schema(description = "Is the general note field")
         String note,
         @Schema(description = "The tags describes represent the log")
-        List<String> tags,
+        Set<String> tags,
         @Schema(description = "The list of the attachment of the log")
-        List<String> attachments,
+        Set<String> attachments,
         @Schema(description = "Identify the entry as summarize of a shift")
         SummarizesDTO summarizes,
         @Schema(description = "The timestamp when the event is occurred")
@@ -43,10 +44,10 @@ public record EntryNewDTO(
         @JsonSerialize(using = LocalDateTimeSerializer.class)
         LocalDateTime eventAt,
         @Schema(description = "The list user that need to be notify by email")
-        List<String> userIdsToNotify
+        Set<String> userIdsToNotify
 ) {
     public EntryNewDTO {
-        if (tags == null) tags = Collections.emptyList();
-        if (attachments == null) attachments = Collections.emptyList();
+        if (tags == null) tags = Collections.emptySet();
+        if (attachments == null) attachments = Collections.emptySet();
     }
 }

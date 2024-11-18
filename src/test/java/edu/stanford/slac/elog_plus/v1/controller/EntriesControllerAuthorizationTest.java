@@ -122,7 +122,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -167,7 +167,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -217,7 +217,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -239,7 +239,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -284,7 +284,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -346,7 +346,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult1.getPayload(),
                                                         newLogBookResult2.getPayload()
                                                 )
@@ -431,7 +431,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult1.getPayload()
                                                 )
                                         )
@@ -455,7 +455,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult1.getPayload(),
                                                         newLogBookResult2.getPayload()
                                                 )
@@ -479,7 +479,7 @@ public class EntriesControllerAuthorizationTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult1.getPayload(),
                                                         newLogBookResult2.getPayload()
                                                 )
@@ -761,12 +761,12 @@ public class EntriesControllerAuthorizationTest {
                                     EntryNewDTO
                                             .builder()
                                             .logbooks(
-                                                    List.of(
+                                                    Set.of(
                                                             logbookId
                                                     )
                                             )
                                             .tags(
-                                                    List.of(
+                                                    Set.of(
                                                             tagId
                                                     )
                                             )

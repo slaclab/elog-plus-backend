@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -267,10 +268,10 @@ public class TaskTest {
         String newLogID = entryService.createNew(
                 EntryNewDTO
                         .builder()
-                        .logbooks(List.of(logbookId))
+                        .logbooks(Set.of(logbookId))
                         .text("This is a log for test")
                         .title("A very wonderful log")
-                        .attachments(List.of(finalAttachmentId))
+                        .attachments(Set.of(finalAttachmentId))
                         .build(),
                 sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
         );

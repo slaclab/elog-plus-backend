@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static java.util.Collections.emptyList;
@@ -83,7 +84,7 @@ public class EntryServiceSupersededTest {
         String newLogID = entryService.createNew(
                 EntryNewDTO
                         .builder()
-                        .logbooks(List.of(logbook.id()))
+                        .logbooks(Set.of(logbook.id()))
                         .text("This is a log for test")
                         .title("A very wonderful log")
                         .build(),
@@ -97,7 +98,7 @@ public class EntryServiceSupersededTest {
                 newLogID,
                 EntryNewDTO
                         .builder()
-                        .logbooks(List.of(logbook.id()))
+                        .logbooks(Set.of(logbook.id()))
                         .text("This is a followup log for log %s".formatted(newLogID))
                         .title("A very wonderful followup log")
                         .build(),
@@ -109,7 +110,7 @@ public class EntryServiceSupersededTest {
                 newLogID,
                 EntryNewDTO
                         .builder()
-                        .logbooks(List.of(logbook.id()))
+                        .logbooks(Set.of(logbook.id()))
                         .text("This is another followup log for log %s".formatted(newLogID))
                         .title("A very wonderful followup log")
                         .build(),
@@ -120,7 +121,7 @@ public class EntryServiceSupersededTest {
                 newLogID,
                 EntryNewDTO
                         .builder()
-                        .logbooks(List.of(logbook.id()))
+                        .logbooks(Set.of(logbook.id()))
                         .text("This is a superseded for log for log %s".formatted(newLogID))
                         .title("A very wonderful superseded log")
                         .build(),
@@ -149,7 +150,7 @@ public class EntryServiceSupersededTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Log to be referenced")
                                 .text("This is a log for test")
                                 .build(),
@@ -164,7 +165,7 @@ public class EntryServiceSupersededTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Title Reference %s".formatted(newLogID))
                                 .text("Reference 1 to %s".formatted(sharedUtilityService.createReferenceHtmlFragment("This is a text with reference", List.of(newLogID))))
                                 .build(),
@@ -178,7 +179,7 @@ public class EntryServiceSupersededTest {
                         newLogID,
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Title reference 2 to %s".formatted(newLogID))
                                 .text("Reference 2 %s".formatted(sharedUtilityService.createReferenceHtmlFragment("This is a text with reference", List.of(newLogID))))
                                 .build(),
@@ -192,7 +193,7 @@ public class EntryServiceSupersededTest {
                         newLogID,
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .text("This is a superseded for log for log %s".formatted(newLogID))
                                 .title("A very wonderful superseded log")
                                 .build(),
@@ -259,7 +260,7 @@ public class EntryServiceSupersededTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Log to be referenced")
                                 .text("This is a log for test")
                                 .build(),
@@ -274,7 +275,7 @@ public class EntryServiceSupersededTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Title Reference %s".formatted(newLogID))
                                 .text("Reference 1 to %s".formatted(sharedUtilityService.createReferenceHtmlFragment("This is a text with reference", List.of(newLogID))))
                                 .build(),
@@ -288,7 +289,7 @@ public class EntryServiceSupersededTest {
                         newLogID,
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Title reference 2 to %s".formatted(newLogID))
                                 .text("Reference 2 %s".formatted(sharedUtilityService.createReferenceHtmlFragment("This is a text with reference", List.of(newLogID))))
                                 .build(),
@@ -312,7 +313,7 @@ public class EntryServiceSupersededTest {
                         newLogID,
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .text("This is a superseded for log for log %s".formatted(newLogID))
                                 .title("A very wonderful superseded log")
                                 .build(),
@@ -381,7 +382,7 @@ public class EntryServiceSupersededTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .title("Log to be superseded")
                                 .text("This is a log for test")
                                 .eventAt(eventAtDate)
@@ -395,7 +396,7 @@ public class EntryServiceSupersededTest {
                         newLogID,
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(logbook.id()))
+                                .logbooks(Set.of(logbook.id()))
                                 .text("This is a superseded for log for log %s".formatted(newLogID))
                                 .title("A very wonderful superseded log")
                                 .build(),

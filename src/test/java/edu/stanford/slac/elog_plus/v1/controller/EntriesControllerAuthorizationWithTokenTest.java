@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationOwnerTypeDTO.Token;
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationOwnerTypeDTO.User;
@@ -123,7 +124,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -145,7 +146,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -190,7 +191,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -252,7 +253,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult1.getPayload(),
                                                         newLogBookResult2.getPayload()
                                                 )
@@ -368,7 +369,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -392,7 +393,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -481,7 +482,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )
@@ -505,7 +506,7 @@ public class EntriesControllerAuthorizationWithTokenTest {
                                 EntryNewDTO
                                         .builder()
                                         .logbooks(
-                                                List.of(
+                                                Set.of(
                                                         newLogBookResult.getPayload()
                                                 )
                                         )

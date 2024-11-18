@@ -164,8 +164,8 @@ public class AttachmentControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
-                                                .attachments(List.of(newAttachmentID.getPayload()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
+                                                .attachments(Set.of(newAttachmentID.getPayload()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -215,8 +215,8 @@ public class AttachmentControllerTest {
                                             ),
                                             EntryNewDTO
                                                     .builder()
-                                                    .logbooks(List.of(newLogBookResult.getPayload().id()))
-                                                    .attachments(List.of(newAttachmentID.getPayload()))
+                                                    .logbooks(Set.of(newLogBookResult.getPayload().id()))
+                                                    .attachments(Set.of(newAttachmentID.getPayload()))
                                                     .text("This is a log for test")
                                                     .title("A very wonderful log")
                                                     .build()

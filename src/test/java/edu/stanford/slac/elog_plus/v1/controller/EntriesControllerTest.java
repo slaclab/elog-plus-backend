@@ -40,6 +40,7 @@ import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF;
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF_ID;
@@ -107,7 +108,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -132,7 +133,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -186,11 +187,11 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .attachments(
-                                                        List.of(
+                                                        Set.of(
                                                                 finalNewAttachmentID.getPayload()
                                                         )
                                                 )
@@ -249,11 +250,11 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .tags(
-                                                        List.of(
+                                                        Set.of(
                                                                 "wrong id"
                                                         )
                                                 )
@@ -278,7 +279,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -341,7 +342,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -378,7 +379,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -398,7 +399,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -466,7 +467,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -486,7 +487,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -506,7 +507,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -530,7 +531,7 @@ public class EntriesControllerTest {
                         "not found superseded log",
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -553,7 +554,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -574,7 +575,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a followup for entry %s".formatted(newLogIDResult.getPayload()))
                                 .title("A very wonderful follow up log %s".formatted(newLogIDResult.getPayload()))
                                 .build()
@@ -594,7 +595,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -669,7 +670,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -689,7 +690,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log")
                                 .build()
@@ -707,7 +708,7 @@ public class EntriesControllerTest {
                         newSupersedeLogIDResult1.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful supersede log of supersede")
                                 .build()
@@ -751,7 +752,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .build()
@@ -772,7 +773,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful followup log one")
                                 .build()
@@ -790,7 +791,7 @@ public class EntriesControllerTest {
                         newLogIDResult.getPayload(),
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful followup log two")
                                 .build()
@@ -880,7 +881,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
@@ -1072,11 +1073,11 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(logbookCreationResult.getPayload().id()))
+                                            .logbooks(Set.of(logbookCreationResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
-                                            .tags(List.of(tagIds[finalIdx]))
+                                            .tags(Set.of(tagIds[finalIdx]))
                                             .build()
                             )
                     );
@@ -1155,10 +1156,10 @@ public class EntriesControllerTest {
                                 ),
                                 EntryNewDTO
                                         .builder()
-                                        .logbooks(List.of(logbookCreationResult.getPayload().id()))
+                                        .logbooks(Set.of(logbookCreationResult.getPayload().id()))
                                         .text("This is a log for test")
                                         .title("A very wonderful log with two tag")
-                                        .tags(List.of(newTagIDA.getPayload(), newTagIDB.getPayload()))
+                                        .tags(Set.of(newTagIDA.getPayload(), newTagIDB.getPayload()))
                                         .build()
                         )
                 );
@@ -1175,10 +1176,10 @@ public class EntriesControllerTest {
                                 ),
                                 EntryNewDTO
                                         .builder()
-                                        .logbooks(List.of(logbookCreationResult.getPayload().id()))
+                                        .logbooks(Set.of(logbookCreationResult.getPayload().id()))
                                         .text("This is a log for test")
                                         .title("A very wonderful log with one tag")
-                                        .tags(List.of(newTagIDA.getPayload()))
+                                        .tags(Set.of(newTagIDA.getPayload()))
                                         .build()
                         )
                 );
@@ -1250,7 +1251,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .note(String.valueOf(finalIdx))
                                             .title("A very wonderful log for index=" + finalIdx)
@@ -1300,10 +1301,10 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
-                                                .tags(List.of("tag-1", "tag-2"))
+                                                .tags(Set.of("tag-1", "tag-2"))
                                                 .build()
                                 )
                 );
@@ -1356,10 +1357,10 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(logbookCreationResult.getPayload().id()))
+                                                .logbooks(Set.of(logbookCreationResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
-                                                .tags(List.of(tag01Id.getPayload(), tag02Id.getPayload()))
+                                                .tags(Set.of(tag01Id.getPayload(), tag02Id.getPayload()))
                                                 .build()
                                 )
                 );
@@ -1438,7 +1439,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
@@ -1600,7 +1601,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
@@ -1764,7 +1765,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
@@ -1852,7 +1853,7 @@ public class EntriesControllerTest {
                                     ),
                                     EntryNewDTO
                                             .builder()
-                                            .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                            .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                             .text("This is a log for test")
                                             .title("A very wonderful log")
                                             .note(String.valueOf(finalIdx))
@@ -1964,7 +1965,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .eventAt(LocalDateTime.of(2024,1,1, 7,59,30))
@@ -2044,7 +2045,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(finalNewLogBookResult1.getPayload().id()))
+                                                .logbooks(Set.of(finalNewLogBookResult1.getPayload().id()))
                                                 .text("This is a log for test")
                                                 .title("A very wonderful log")
                                                 .summarizes(
@@ -2091,7 +2092,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("reference one")
                                                 .title("Reference one")
                                                 .build()
@@ -2112,7 +2113,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .text("reference two")
                                                 .title("Reference two")
                                                 .build()
@@ -2139,7 +2140,7 @@ public class EntriesControllerTest {
                                         ),
                                         EntryNewDTO
                                                 .builder()
-                                                .logbooks(List.of(newLogBookResult.getPayload().id()))
+                                                .logbooks(Set.of(newLogBookResult.getPayload().id()))
                                                 .title("Referencer log")
                                                 .text(fragment.html())
                                                 .build()

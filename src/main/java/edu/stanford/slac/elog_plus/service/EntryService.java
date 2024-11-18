@@ -210,9 +210,9 @@ public class EntryService {
         Entry finalNewEntry = newEntry;
 
         // be sure that entry has not double logbooks, remove the double logbooks id
-        newEntry.setLogbooks(
-                newEntry.getLogbooks().stream().distinct().toList()
-        );
+//        newEntry.setLogbooks(
+//                newEntry.getLogbooks().stream().distinct().toList()
+//        );
 
         // verify that all logbook exists
         assertion(

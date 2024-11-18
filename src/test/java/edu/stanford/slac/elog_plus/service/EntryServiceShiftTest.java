@@ -114,7 +114,7 @@ public class EntryServiceShiftTest {
                 () -> entryService.createNew(
                         EntryNewDTO
                                 .builder()
-                                .logbooks(List.of(testLogbook.id()))
+                                .logbooks(Set.of(testLogbook.id()))
                                 .text("This is a log for test")
                                 .title("A very wonderful log")
                                 .eventAt(LocalDateTime.of(2024, 8, 15, 17, 39, 5))
