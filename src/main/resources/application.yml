@@ -6,6 +6,11 @@ logging:
     org.apache.kafka: ${ELOG_PLUS_KAFKA_LOG_LEVEL:error}
     om.hazelcast: TRACE
 server:
+  error:
+    whitelabel:
+      enabled: false
+    include-message: always
+    include-binding-errors: always
   tomcat:
     mbeanregistry:
       enabled: true

@@ -166,6 +166,29 @@ public class EntryServiceTest {
     }
 
     @Test
+    public void testLogCreationRemoveDUplciatedLogbookId() {
+        var logbook = getTestLogbook();
+        String newLogID = entryService.createNew(
+                EntryNewDTO
+                        .builder()
+                        .logbooks(List.of(logbook.id(), logbook.id()))
+                        .text("This is a log for test")
+                        .title("A very wonderful log")
+                        .build(),
+                sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
+        );
+
+        assertThat(newLogID).isNotNull();
+
+        // get full entry
+        EntryDTO fullLog = assertDoesNotThrow(
+                () -> entryService.getFullEntry(newLogID)
+        );
+        assertThat(fullLog).isNotNull();
+        assertThat(fullLog.logbooks().size()).isEqualTo(1);
+    }
+
+    @Test
     public void testLogCreationWithEmailNotification() {
         var logbook = getTestLogbook();
         String newLogID = entryService.createNew(

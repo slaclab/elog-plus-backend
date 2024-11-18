@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - ELog Plus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #ffffff);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-wrapper {
+            text-align: center;
+            padding: 40px;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .error-title {
+            font-size: 6em;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .error-subtitle {
+            font-size: 1.5em;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            color: #495057;
+        }
+        .error-details {
+            text-align: left;
+            margin: 20px auto;
+            font-size: 1em;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .error-details p {
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .error-details span {
+            font-weight: normal;
+            color: #333;
+        }
+        .error-timestamp {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #868e96;
+        }
+        .elog-brand {
+            margin-top: 30px;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+            display: inline-block;
+            border: 2px solid #007bff;
+            padding: 10px 25px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .elog-brand:hover {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 0.85em;
+            color: #adb5bd;
+        }
+    </style>
+</head>
+<body>
+<div class="error-wrapper">
+    <div class="error-title">404</div>
+    <div class="error-subtitle">Oops! Path Not Found</div>
+    <div class="error-details">
+        <p><strong>Message:</strong> <span th:text="${message}">No static resource found.</span></p>
+    </div>
+    <div class="error-timestamp">
+        Timestamp: <span th:text="${timestamp}">1731960800000</span>
+    </div>
+    <a href="/" class="elog-brand">Go Back to ELog Plus</a>
+</div>
+<footer>
+    &copy; 2024 ELog Plus. All rights reserved.
+</footer>
+</body>
+</html>

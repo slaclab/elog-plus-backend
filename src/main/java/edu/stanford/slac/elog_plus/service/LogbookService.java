@@ -427,6 +427,7 @@ public class LogbookService {
      * @param logbookId the logbook id
      * @return the full logbooks
      */
+    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId")
     public LogbookDTO getLogbook(String logbookId) {
         return getLogbook(logbookId, Optional.empty());
     }
