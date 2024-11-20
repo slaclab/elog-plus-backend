@@ -28,9 +28,7 @@ public class Entry {
     private String originId;
     private String supersededBy;
     private String entryType;
-    @Indexed
     private List<String> logbooks;
-    @Indexed
     private Summarizes summarizes;
     @TextIndexed
     private String title;
@@ -40,26 +38,19 @@ public class Entry {
     private String lastName;
     private String firstName;
     private String userName;
-    @Indexed
     @Builder.Default
     // the list of the tags ids
     private List<String> tags = new ArrayList<>();
-    @Indexed
     @Builder.Default
     private List<String> attachments = new ArrayList<>();
-    @Indexed
     @Builder.Default
     private List<String> followUps = new ArrayList<>();
-    @Indexed
     @Builder.Default
     private List<String> references = new ArrayList<>();
     @Builder.Default
     @Transient
     private List<String> referencedBy = new ArrayList<>();
-    @Indexed
-    @Builder.Default
-    private LocalDateTime loggedAt = LocalDateTime.now();
-    @Indexed
+    private LocalDateTime loggedAt;
     private LocalDateTime eventAt;
     /**
      * The list of user IDs that need to be notified by email when the entry is created.
