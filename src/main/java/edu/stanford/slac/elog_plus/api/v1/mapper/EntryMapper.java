@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.wrapCatch;
 
@@ -35,7 +36,7 @@ public abstract class EntryMapper {
     @Autowired
     private LogbookService logbookService;
 
-    @Mapping(target = "loggedBy", expression = "java(entry.getFirstName() + \" \" + entry.getLastName())")
+    @Mapping(target = "loggedBy", expression = "java(getLoggedBy(entry))")
     @Mapping(target = "followUps", ignore = true)
     @Mapping(source = "logbooks", target = "logbooks", qualifiedByName = "mapToLogbookSummary")
     @Mapping(target = "referencedBy", ignore = true)
@@ -44,7 +45,7 @@ public abstract class EntryMapper {
     @Mapping(target = "supersededBy", ignore = true)
     public abstract EntryDTO fromModel(Entry entry);
 
-    @Mapping(target = "loggedBy", expression = "java(entry.getFirstName() + \" \" + entry.getLastName())")
+    @Mapping(target = "loggedBy", expression = "java(getLoggedBy(entry))")
     @Mapping(target = "attachments", ignore = true)
     @Mapping(target = "followUps", ignore = true)
     @Mapping(source = "logbooks", target = "logbooks", qualifiedByName = "mapToLogbookSummary")
@@ -54,7 +55,7 @@ public abstract class EntryMapper {
     @Mapping(target = "supersededBy", ignore = true)
     public abstract EntryDTO fromModelNoAttachment(Entry entry);
 
-    @Mapping(target = "loggedBy", expression = "java(entry.getFirstName() + \" \" + entry.getLastName())")
+    @Mapping(target = "loggedBy", expression = "java(getLoggedBy(entry))")
     @Mapping(source = "logbooks", target = "logbooks", qualifiedByName = "mapToLogbookSummary")
     @Mapping(target = "followingUp", expression = "java(getFollowingUp(entry.getId()))")
     @Mapping(target = "referencedBy", expression = "java(getReferenceBy(entry.getId()))")
@@ -78,6 +79,20 @@ public abstract class EntryMapper {
                 -1,
                 "EntryMapper::getFollowingUp"
         );
+    }
+
+    /**
+     * Get the name of the user who logged the entry
+     *
+     * @param entry the entry to check
+     * @return the name of the user who logged the entry
+     */
+    public String getLoggedBy(Entry entry) {
+        // check if the entry is null
+        if (entry == null) return null;
+        // in case or last name or first name are null
+        String loggedBy = "%s %s".formatted(Objects.requireNonNullElse(entry.getFirstName(),""), Objects.requireNonNullElse(entry.getLastName(), ""));
+        return loggedBy.trim();
     }
 
     /**
