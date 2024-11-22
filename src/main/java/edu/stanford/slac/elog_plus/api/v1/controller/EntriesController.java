@@ -250,8 +250,8 @@ public class EntriesController {
                                 .limit(limit.orElse(0))
                                 .search(search.orElse(null))
                                 .tags(tags.orElse(Collections.emptyList()))
-                                // cache is filled by the pre-authorized method @entryAuthorizationService::canSearchEntry
-                                .logbooks(authorizationCache.getAuthorizedLogbookId())
+                                // if the logBooks is empty we should use all the authorized logbook
+                                .logbooks(authorizationCache.getRootUser()?logBooks.orElse(Collections.emptyList()):logBooks.orElse(authorizationCache.getAuthorizedLogbookId()))
                                 .sortByLogDate(sortByLogDate.orElse(false))
                                 .hideSummaries(hideSummaries.orElse(false))
                                 .requireAllTags(requireAllTags.orElse(false))

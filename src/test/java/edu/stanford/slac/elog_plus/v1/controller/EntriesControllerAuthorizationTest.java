@@ -30,10 +30,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -913,5 +910,239 @@ public class EntriesControllerAuthorizationTest {
                 .hasSize(idForLogbookB.size())
                 .extracting(EntrySummaryDTO::id)
                 .contains(idForLogbookB.toArray(new String[idForLogbookB.size()]));
+    }
+
+    @Test
+    public void checkFIndForASpecificLogbookNonAdmin() {
+        int entry_size = 20;
+        Set<String> idForLogbookA = new HashSet<>();
+        Set<String> idForLogbookB = new HashSet<>();
+        Set<String> idForLogbookC = new HashSet<>();
+        var logbookA= assertDoesNotThrow(
+                () -> testControllerHelperService.createNewLogbook(
+                        mockMvc,
+                        status().isCreated(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        NewLogbookDTO
+                                .builder()
+                                .name("LogbookA")
+                                .writeAll(true)
+                                .build()
+                )
+        );
+
+        var logbookB = assertDoesNotThrow(
+                () -> testControllerHelperService.createNewLogbook(
+                        mockMvc,
+                        status().isCreated(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        NewLogbookDTO
+                                .builder()
+                                .name("LogbookB")
+                                .writeAll(true)
+                                .build()
+                )
+        );
+
+        var logbookC = assertDoesNotThrow(
+                () -> testControllerHelperService.createNewLogbook(
+                        mockMvc,
+                        status().isCreated(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        NewLogbookDTO
+                                .builder()
+                                .name("LogbookC")
+                                .build()
+                )
+        );
+
+
+        // write a limited random number of entries to logbook A or logbook B
+        for (int i = 0; i < entry_size; i++) {
+            int finalI = i;
+            String logbookId = switch (i % 3) {
+                case 0 -> logbookA.getPayload();
+                case 1 -> logbookB.getPayload();
+                case 2 -> logbookC.getPayload();
+                default -> null;
+            };
+            var entryCreationResult =
+                    assertDoesNotThrow(
+                            () -> testControllerHelperService.createNewLog(
+                                    mockMvc,
+                                    status().isCreated(),
+                                    Optional.of("user1@slac.stanford.edu"),
+                                    EntryNewDTO
+                                            .builder()
+                                            .logbooks(
+                                                    Set.of(
+                                                            logbookId
+                                                    )
+                                            )
+                                            .text(String.format("This is a log for test %d in logbook %s", finalI, logbookId))
+                                            .title("Another very wonderful logbook %d".formatted(finalI % 3))
+                                            .build()
+                            )
+                    );
+            assertThat(entryCreationResult.getErrorCode()).isEqualTo(0);
+            switch (i % 3) {
+                case 0 -> idForLogbookA.add(entryCreationResult.getPayload());
+                case 1 -> idForLogbookB.add(entryCreationResult.getPayload());
+                case 2 -> idForLogbookC.add(entryCreationResult.getPayload());
+            }
+
+        }
+
+        // searching of logbook 3 should give error
+        var notAuthorized = assertThrows(
+                ResourceNotFound.class,
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isNotFound(),
+                        Optional.of("user2@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(entry_size),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of(logbookC.getPayload())),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(notAuthorized).isNotNull();
+
+
+        // now search with user 2 for logbook A
+        var entriesForLogbookAWithUser2 = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user2@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(entry_size),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of(logbookA.getPayload())),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(entriesForLogbookAWithUser2.getErrorCode()).isEqualTo(0);
+        assertThat(entriesForLogbookAWithUser2.getPayload())
+                .hasSize(idForLogbookA.size())
+                .extracting(EntrySummaryDTO::id)
+                .contains(idForLogbookA.toArray(new String[0]));
+
+        // search without logbook should find only entry that belongs to logbookA and logbookB
+        var shouldReturnOnlyEntryFromLogbookAAndB = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user2@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(entry_size),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(shouldReturnOnlyEntryFromLogbookAAndB.getErrorCode()).isEqualTo(0);
+        assertThat(shouldReturnOnlyEntryFromLogbookAAndB.getPayload())
+                .hasSize(idForLogbookA.size() + idForLogbookB.size())
+                .extracting(EntrySummaryDTO::id)
+                .contains(idForLogbookA.toArray(new String[0]))
+                .contains(idForLogbookB.toArray(new String[0]));
+
+        // root user should search form all logbook if empty list is passed
+        var shouldReturnAll = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(entry_size),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(shouldReturnAll.getErrorCode()).isEqualTo(0);
+        assertThat(shouldReturnAll.getPayload())
+                .hasSize(idForLogbookA.size() + idForLogbookB.size() + idForLogbookC.size())
+                .extracting(EntrySummaryDTO::id)
+                .contains(idForLogbookA.toArray(new String[0]))
+                .contains(idForLogbookB.toArray(new String[0]))
+                .contains(idForLogbookC.toArray(new String[0]));
+
+        // searching with root on a single logbook should return all entries form that
+        // now search with user 2 for logbook A
+        var entriesForLogbookAWithUserRoot = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(entry_size),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of(logbookA.getPayload())),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(entriesForLogbookAWithUserRoot.getErrorCode()).isEqualTo(0);
+        assertThat(entriesForLogbookAWithUserRoot.getPayload())
+                .hasSize(idForLogbookA.size())
+                .extracting(EntrySummaryDTO::id)
+                .contains(idForLogbookA.toArray(new String[0]));
+
+        var shouldReturnOnlyEntryFromLogbookAAndBForRootUser = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(idForLogbookA.size() + idForLogbookB.size()),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of(logbookA.getPayload(), logbookB.getPayload())),
+                        Optional.empty(),
+                        Optional.empty()
+                )
+        );
+        assertThat(shouldReturnOnlyEntryFromLogbookAAndBForRootUser.getErrorCode()).isEqualTo(0);
+        assertThat(shouldReturnOnlyEntryFromLogbookAAndBForRootUser.getPayload())
+                .hasSize(idForLogbookA.size() + idForLogbookB.size())
+                .extracting(EntrySummaryDTO::id)
+                .contains(idForLogbookA.toArray(new String[0]))
+                .contains(idForLogbookB.toArray(new String[0]));
     }
 }

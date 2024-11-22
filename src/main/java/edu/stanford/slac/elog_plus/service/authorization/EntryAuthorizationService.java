@@ -297,6 +297,7 @@ public class EntryAuthorizationService {
     public boolean canSearchEntry(Authentication authentication, Optional<List<String>> logBooks, AuthorizationCache authorizationCache) {
         // return all public readable logbook ids
         List<String> allPublicReadableLogbookIds = logbookService.getAllIdsReadAll();
+
         // check authorization on
         assertion(
                 NotAuthorized.notAuthorizedBuilder()
@@ -304,10 +305,11 @@ public class EntryAuthorizationService {
                         .errorDomain("EntryAuthorizationService::canSearchEntry")
                         .build(),
                 // need to be authenticated
-                () -> authService.checkAuthentication(authentication)
+                ()->authService.checkAuthentication(authentication)
         );
 
-        if (!authService.checkForRoot(authentication)) {
+        authorizationCache.setRootUser(authService.checkForRoot(authentication));
+        if (!authorizationCache.getRootUser()) {
             // if user is not root we need to check for specific authorization
             List<String> allAuthorizedLogbookIds = authService.getAllAuthorizationForOwnerAndAndAuthTypeAndResourcePrefix(
                             authentication.getCredentials().toString(),
@@ -351,6 +353,7 @@ public class EntryAuthorizationService {
                         .distinct()
                         .toList();
             }
+
             if(!authorizedLogbook.isEmpty()) {
                 // cache the found authorized logbook
                 authorizationCache.setAuthorizedLogbookId(authorizedLogbook);
