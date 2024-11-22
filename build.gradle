@@ -11,7 +11,7 @@ group = 'edu.stanford.slac'
 version = '1.0.0'
 
 ext {
-    ad_eed_baselib_version = "0.1.86"
+    ad_eed_baselib_version = "0.1.87"
     ad_eed_base_mongodb_lib_version = "1.0.9"
     javaSourceCompatibility = JavaVersion.VERSION_21
     javaTargetCompatibility = JavaVersion.VERSION_21

@@ -1,6 +1,8 @@
 package edu.stanford.slac.elog_plus.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.stanford.slac.ad.eed.baselib.exception.NotAuthenticated;
+import edu.stanford.slac.ad.eed.baselib.exception.NotAuthorized;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -34,5 +36,16 @@ public class HandleValidationError {
         model.addAttribute("message", ex.getMessage());
         model.addAttribute("timestamp", System.currentTimeMillis());
         return "error"; // Custom HTML error page (error.html)
+    }
+
+
+    @ExceptionHandler(NotAuthenticated.class)
+    public ResponseEntity<Object> handleNotAuthenticated(NotAuthenticated ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(NotAuthorized.class)
+    public ResponseEntity<Object> handleNotAuthorized(NotAuthorized ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 }

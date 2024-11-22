@@ -1,9 +1,9 @@
 
 package edu.stanford.slac.elog_plus.service.authorization;
 
+import edu.stanford.slac.ad.eed.baselib.exception.NotAuthenticated;
 import edu.stanford.slac.ad.eed.baselib.exception.NotAuthorized;
 import edu.stanford.slac.ad.eed.baselib.service.AuthService;
-import edu.stanford.slac.elog_plus.exception.NotAuthenticated;
 import edu.stanford.slac.elog_plus.exception.ResourceNotFound;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -29,6 +29,7 @@ public class BaseAuthorizationService {
         assertion(
                 NotAuthenticated.notAuthenticatedBuilder()
                         .errorCode(-1)
+                        .errorDomain("BaseAuthorizationService::checkAuthenticated")
                         .build(),
                 // should be authenticated
                 () -> authService.checkAuthentication(authentication)
