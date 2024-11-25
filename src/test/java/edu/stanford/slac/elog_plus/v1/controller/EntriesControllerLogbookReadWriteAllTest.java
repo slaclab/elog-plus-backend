@@ -388,6 +388,7 @@ public class EntriesControllerLogbookReadWriteAllTest {
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
+                        Optional.empty(),
                         Optional.of(10),
                         Optional.empty(),
                         Optional.empty(),

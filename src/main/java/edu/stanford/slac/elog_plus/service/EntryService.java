@@ -8,8 +8,10 @@ import edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper;
 import edu.stanford.slac.elog_plus.api.v1.mapper.QueryParameterMapper;
 import edu.stanford.slac.elog_plus.exception.*;
 import edu.stanford.slac.elog_plus.model.Entry;
+import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.model.Summarizes;
 import edu.stanford.slac.elog_plus.repository.EntryRepository;
+import edu.stanford.slac.elog_plus.utility.DateUtilities;
 import edu.stanford.slac.elog_plus.utility.StringUtilities;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,10 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.assertion;
@@ -75,10 +74,33 @@ public class EntryService {
             // in this case user is not authorize on any logbook
             return emptyList();
         }
+
+        // check if we need to return the last n shifts entries
+        if(queryWithAnchorDTO.lastNShifts() != null) {
+            if (queryWithAnchorDTO.lastNShifts() > 0) {
+                var endDateToUse = queryWithAnchorDTO.endDate()==null?LocalDateTime.now():queryWithAnchorDTO.endDate();
+                // find the date of the last n shifts
+                var fromDateByTheNShifts = logbookService.findEarliestNShiftForLogbooks(queryWithAnchorDTO.lastNShifts(), queryWithAnchorDTO.logbooks(), endDateToUse);
+
+                // set new date query range
+                queryWithAnchorDTO = queryWithAnchorDTO.toBuilder()
+                        .startDate(fromDateByTheNShifts)
+                        .endDate(endDateToUse)
+                        .build();
+            } else {
+                throw ControllerLogicException.builder()
+                        .errorCode(-1)
+                        .errorMessage("The lastNShifts parameter need to be greater than 0")
+                        .errorDomain("LogService::findAll")
+                        .build();
+            }
+        }
+
+        QueryWithAnchorDTO finalQueryWithAnchorDTO = queryWithAnchorDTO;
         List<Entry> found = wrapCatch(
                 () -> entryRepository.searchAll(
                         queryParameterMapper.fromDTO(
-                                queryWithAnchorDTO
+                                finalQueryWithAnchorDTO
                         )
                 ),
                 -1,

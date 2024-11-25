@@ -31,7 +31,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,7 +74,7 @@ public class LogbookService {
      */
     public List<String> getAllIdsReadAll() {
         return wrapCatch(
-                ()->logbookRepository.findAllByReadAllIsTrue().stream().map(Logbook::getId).toList(),
+                () -> logbookRepository.findAllByReadAllIsTrue().stream().map(Logbook::getId).toList(),
                 -1,
                 "LogbookService:getAllIdsReadAll"
         );
@@ -85,7 +87,7 @@ public class LogbookService {
      */
     public List<String> getAllIdsWriteAll() {
         return wrapCatch(
-                ()->logbookRepository.findAllByWriteAllIsTrue().stream().map(Logbook::getId).toList(),
+                () -> logbookRepository.findAllByWriteAllIsTrue().stream().map(Logbook::getId).toList(),
                 -1,
                 "LogbookService:getAllIdsWriteAll"
         );
@@ -140,7 +142,7 @@ public class LogbookService {
      * @param newLogbookDTO the new logbooks
      * @return the id of the newly created logbooks
      */
-    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
+    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
     public String createNew(NewLogbookDTO newLogbookDTO) {
         // normalize the name
         newLogbookDTO = newLogbookDTO.toBuilder()
@@ -163,7 +165,7 @@ public class LogbookService {
         );
 
         var toSave = logbookMapper.fromDTO(finalNewLogbookDTO);
-        if(toSave.isWriteAll()) {
+        if (toSave.isWriteAll()) {
             // force also readAll to true
             toSave.setReadAll(true);
         }
@@ -183,7 +185,7 @@ public class LogbookService {
      * @param logbookDTO the updated logbooks
      */
     @Transactional
-    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
+    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
     public LogbookDTO update(String logbookId, UpdateLogbookDTO logbookDTO) {
         // check if id exists
         Logbook lbToUpdated = wrapCatch(
@@ -250,7 +252,7 @@ public class LogbookService {
 
         lbToUpdated.setReadAll(updateLogbookInfo.isReadAll());
         lbToUpdated.setWriteAll(updateLogbookInfo.isWriteAll());
-        if(updateLogbookInfo.isWriteAll()) {
+        if (updateLogbookInfo.isWriteAll()) {
             // force also readAll to true
             lbToUpdated.setReadAll(true);
         }
@@ -741,7 +743,7 @@ public class LogbookService {
      * @param allNewShift all the new shift
      */
     @Transactional()
-    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
+    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
     public void replaceShift(String logbookId, List<ShiftDTO> allNewShift) {
         Optional<Logbook> lb =
                 wrapCatch(
@@ -785,7 +787,7 @@ public class LogbookService {
      * @param newShiftDTO the shift description
      */
     @Transactional(propagation = Propagation.NESTED)
-    @CacheEvict(value = {"logbooks","tags"}, allEntries = true)
+    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
     public String addShift(String logbookId, NewShiftDTO newShiftDTO) {
         // validate the shift
         Shift shiftToAdd = validateShift(shiftMapper.fromDTO(newShiftDTO), -1, "LogbookService:addShift");
@@ -1118,7 +1120,7 @@ public class LogbookService {
 
             // update the logbook
             if (!newAuth.isEmpty()) {
-               // create all new authorization
+                // create all new authorization
                 for (NewAuthorizationDTO auth :
                         newAuth) {
                     wrapCatch(
@@ -1179,7 +1181,7 @@ public class LogbookService {
      * Delete the authorization for the logbook and an user
      *
      * @param logbookId the logbook id
-     * @param userId the user id
+     * @param userId    the user id
      */
     public void deleteLogbookUsersAuthorization(String logbookId, String userId) {
         wrapCatch(
@@ -1200,7 +1202,7 @@ public class LogbookService {
      * Delete the authorization for the logbook
      *
      * @param logbookId the logbook id
-     * @param groupId the group id
+     * @param groupId   the group id
      */
     public void deleteLogbookGroupAuthorization(String logbookId, String groupId) {
         wrapCatch(
@@ -1279,10 +1281,10 @@ public class LogbookService {
     /**
      * Check if the shift overlap with the other
      *
-     * @param newShift     the new shift to check
-     * @param allShift     all the shift to check
-     * @param errorCode    the error code to generate in case of fail
-     * @param errorDomain  the error domain in case of fail
+     * @param newShift    the new shift to check
+     * @param allShift    all the shift to check
+     * @param errorCode   the error code to generate in case of fail
+     * @param errorDomain the error domain in case of fail
      */
     private void checkShiftAmongAllOther(
             Shift newShift,
@@ -1292,12 +1294,12 @@ public class LogbookService {
         for (Shift savedShift :
                 allShift) {
             // check from field
-            if(overlap(
+            if (overlap(
                     newShift.getFromTime(),
                     newShift.getToTime(),
                     savedShift.getFromTime(),
                     savedShift.getToTime()
-            )){
+            )) {
                 throw ControllerLogicException
                         .builder()
                         .errorCode(errorCode)
@@ -1412,5 +1414,122 @@ public class LogbookService {
                 shiftToAdd.getToTime().getHour() * 60 + shiftToAdd.getToTime().getMinute()
         );
         return shiftToAdd;
+    }
+
+    /**
+     * Find the earliest shift among the last n shifts
+     *
+     * @param n        the number of shifts to consider
+     * @param logbooks the logbooks to consider
+     * @param fromDate the date from which to consider the shifts
+     * @return the earliest date
+     */
+    public LocalDateTime findEarliestNShiftForLogbooks(Integer n, List<String> logbooks, LocalDateTime fromDate) {
+        List<Logbook> allLogbooks = new ArrayList<>();
+        if (logbooks == null || logbooks.isEmpty()) {
+            allLogbooks.addAll(
+                    wrapCatch(
+                            logbookRepository::findAll,
+                            -1,
+                            "LogbookService:findEarliestNShiftForLogbooks"
+                    )
+            );
+        } else {
+            allLogbooks.addAll(
+                    wrapCatch(
+                            () -> logbookRepository.findAllById(logbooks),
+                            -1,
+                            "LogbookService:findEarliestNShiftForLogbooks"
+                    )
+            );
+        }
+        // now we need to find the earliest date among the last n shifts
+        LocalDateTime earliestStart = fromDate;
+        // in ths case for each logbook we need to calculate the last n shifts, each shift is a hour range
+        // so we need to calculate the time range for the last n shifts
+        for (Logbook logbook : allLogbooks) {
+            var shifts = logbook.getShifts();
+            if (shifts.isEmpty()) continue;
+            // calculate the start date and time of the last n shifts
+            var dateFound = findEarliestDateAmongLastNShifts(shifts, n, fromDate);
+            if (dateFound.isBefore(earliestStart)) {
+                earliestStart = dateFound;
+            }
+        }
+
+        return earliestStart;
+    }
+
+    /**
+     * Finds the earliest start date and time among the last N shifts starting from now.
+     *
+     * @param shifts   List of shifts with 'from' and 'to' times in HH:mm format
+     * @param N        Number of last shifts to consider
+     * @param fromDate The date and time from which to consider the shifts
+     * @return The earliest LocalDateTime among the last N shifts
+     */
+    private LocalDateTime findEarliestDateAmongLastNShifts(List<Shift> shifts, int N, LocalDateTime fromDate) {
+        // Sort shifts by their start time
+        shifts.sort(Comparator.comparing(Shift::getFromTime));
+
+        List<LocalDateTime> shiftStartDateTimes = new ArrayList<>();
+        LocalDateTime currentDateTime = fromDate;
+
+        while (shiftStartDateTimes.size() < N) {
+            List<LocalDateTime> tempShiftStartDateTimes = new ArrayList<>();
+            for (Shift shift : shifts) {
+                LocalTime shiftFromTime = shift.getFromTime();
+                LocalTime shiftToTime = shift.getToTime();
+
+                boolean crossesMidnight = shiftFromTime.isAfter(shiftToTime);
+
+                LocalDate shiftStartDate;
+
+                // Determine the date when the shift started
+                if (crossesMidnight) {
+                    // Shift crosses midnight
+                    if (!currentDateTime.toLocalTime().isBefore(shiftFromTime)) {
+                        // Shift started today
+                        shiftStartDate = currentDateTime.toLocalDate();
+                    } else {
+                        // Shift started yesterday
+                        shiftStartDate = currentDateTime.toLocalDate().minusDays(1);
+                    }
+                } else {
+                    // Shift does not cross midnight
+                    if (!currentDateTime.toLocalTime().isBefore(shiftFromTime)) {
+                        // Shift started today
+                        shiftStartDate = currentDateTime.toLocalDate();
+                    } else {
+                        // Shift started yesterday
+                        shiftStartDate = currentDateTime.toLocalDate().minusDays(1);
+                    }
+                }
+
+                // Combine the date and time to get the shift start datetime
+                LocalDateTime shiftStartDateTime = LocalDateTime.of(shiftStartDate, shiftFromTime);
+
+                // Ensure that the shift started before the current date and time
+                if (shiftStartDateTime.isBefore(currentDateTime)) {
+                    tempShiftStartDateTimes.add(shiftStartDateTime);
+                }
+            }
+
+            if (tempShiftStartDateTimes.isEmpty()) {
+                // No valid shifts found for the current date, move back one day
+                currentDateTime = currentDateTime.minusDays(1);
+                continue;
+            }
+
+            // Find the latest shift start time before currentDateTime
+            LocalDateTime latestShiftStartDateTime = Collections.max(tempShiftStartDateTimes);
+            shiftStartDateTimes.add(latestShiftStartDateTime);
+
+            // Update currentDateTime to just before the found shift to prevent duplicates
+            currentDateTime = latestShiftStartDateTime.minusSeconds(1);
+        }
+
+        // After collecting the last N shift start times, find the earliest date
+        return Collections.min(shiftStartDateTimes);
     }
 }

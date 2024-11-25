@@ -23,6 +23,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -1921,5 +1922,107 @@ public class LogbookServiceTest {
         );
 
         assertThat(exception.getErrorCode()).isEqualTo(-2);
+    }
+
+    @Test
+    public void testFindEarliestNShiftDateForOneLogbooks() {
+        LocalTime[][] shiftRanges = new LocalTime[3][2];
+        shiftRanges[0][0] = LocalTime.of(0, 0);
+        shiftRanges[0][1] = LocalTime.of(7, 59);
+        shiftRanges[1][0] = LocalTime.of(8, 0);
+        shiftRanges[1][1] = LocalTime.of(12, 59);
+        shiftRanges[2][0] = LocalTime.of(13, 0);
+        shiftRanges[2][1] = LocalTime.of(17, 59);
+        String newLogbookID = sharedUtilityService.getTestLogbook();
+        logbookService.replaceShift(
+                newLogbookID,
+                List.of(
+                        ShiftDTO.builder().name("Shift1").from(DateUtilities.toUTCString(shiftRanges[0][0])).to(DateUtilities.toUTCString(shiftRanges[0][1])).build(),
+                        ShiftDTO.builder().name("Shift2").from(DateUtilities.toUTCString(shiftRanges[1][0])).to(DateUtilities.toUTCString(shiftRanges[1][1])).build(),
+                        ShiftDTO.builder().name("Shift3").from(DateUtilities.toUTCString(shiftRanges[2][0])).to(DateUtilities.toUTCString(shiftRanges[2][1])).build()
+                )
+        );
+
+        var earliestDate20 = logbookService.findEarliestNShiftForLogbooks(1, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate20).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 0)));
+
+        // now get the last 2 shifts and return the date in location [1][0]
+        var earliestDate10 = logbookService.findEarliestNShiftForLogbooks(2, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate10).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 0)));
+
+        // now return the last 3 shifts and return the date in location [0][0]
+        var earliestDate00 = logbookService.findEarliestNShiftForLogbooks(3, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate00).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
+
+        // now return the last 4 shifts and return the date in location [2][0] of the day before
+        var earliestDateBefore = logbookService.findEarliestNShiftForLogbooks(4, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDateBefore).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(13, 0)));
+    }
+
+    @Test
+    public void testFindEarliestNShiftDateForOneLogbooksWithHoles() {
+        LocalTime[][] shiftRanges = new LocalTime[3][2];
+        shiftRanges[0][0] = LocalTime.of(0, 0);
+        shiftRanges[0][1] = LocalTime.of(7, 59);
+        shiftRanges[1][0] = LocalTime.of(8, 0);
+        shiftRanges[1][1] = LocalTime.of(12, 59);
+        shiftRanges[2][0] = LocalTime.of(14, 0); // Hole between 13:00 and 14:00
+        shiftRanges[2][1] = LocalTime.of(17, 59);
+        String newLogbookID = sharedUtilityService.getTestLogbook();
+        logbookService.replaceShift(
+                newLogbookID,
+                List.of(
+                        ShiftDTO.builder().name("Shift1").from(DateUtilities.toUTCString(shiftRanges[0][0])).to(DateUtilities.toUTCString(shiftRanges[0][1])).build(),
+                        ShiftDTO.builder().name("Shift2").from(DateUtilities.toUTCString(shiftRanges[1][0])).to(DateUtilities.toUTCString(shiftRanges[1][1])).build(),
+                        ShiftDTO.builder().name("Shift3").from(DateUtilities.toUTCString(shiftRanges[2][0])).to(DateUtilities.toUTCString(shiftRanges[2][1])).build()
+                )
+        );
+
+        var earliestDateBefore = logbookService.findEarliestNShiftForLogbooks(4, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDateBefore).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(8, 0)));
+        earliestDateBefore = logbookService.findEarliestNShiftForLogbooks(3, List.of(newLogbookID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDateBefore).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(14, 0)));
+    }
+
+    @Test
+    public void testFindEarliestNShiftDateForMultipleLogbooks() {
+        LocalTime[][] shiftRanges = new LocalTime[3][2];
+        shiftRanges[0][0] = LocalTime.of(0, 0);
+        shiftRanges[0][1] = LocalTime.of(7, 59);
+        shiftRanges[1][0] = LocalTime.of(8, 0);
+        shiftRanges[1][1] = LocalTime.of(12, 59);
+        shiftRanges[2][0] = LocalTime.of(13, 0);
+        shiftRanges[2][1] = LocalTime.of(17, 59);
+        String newLogbookAID = sharedUtilityService.getTestLogbook("new-logbooks-a");
+        logbookService.replaceShift(
+                newLogbookAID,
+                List.of(
+                        ShiftDTO.builder().name("Shift2A").from(DateUtilities.toUTCString(shiftRanges[1][0])).to(DateUtilities.toUTCString(shiftRanges[1][1])).build(),
+                        ShiftDTO.builder().name("Shift3A").from(DateUtilities.toUTCString(shiftRanges[2][0])).to(DateUtilities.toUTCString(shiftRanges[2][1])).build()
+                )
+        );
+
+        String newLogbookBID = sharedUtilityService.getTestLogbook("new-logbooks-b");
+        logbookService.replaceShift(
+                newLogbookBID,
+                List.of(
+                        ShiftDTO.builder().name("Shift1B").from(DateUtilities.toUTCString(shiftRanges[0][0])).to(DateUtilities.toUTCString(shiftRanges[0][1])).build()
+                )
+        );
+
+        var earliestDate00 = logbookService.findEarliestNShiftForLogbooks(1, List.of(newLogbookAID, newLogbookBID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate00).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now(), shiftRanges[0][0]));
+
+        // now get the last 2 shifts and return the date in location [1][0]
+        var earliestDate00DayMinus1 = logbookService.findEarliestNShiftForLogbooks(2, List.of(newLogbookAID, newLogbookBID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate00DayMinus1).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(1), shiftRanges[0][0]));
+
+        // now return the last 3 shifts and return the date in location [0][0]
+        var earliestDate00DayMinus2 = logbookService.findEarliestNShiftForLogbooks(3, List.of(newLogbookAID, newLogbookBID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate00DayMinus2).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(2), shiftRanges[0][0]));
+
+        // now return the last 4 shifts and return the date in location [2][0] of the day before
+        var earliestDate00DayMinus3 = logbookService.findEarliestNShiftForLogbooks(4, List.of(newLogbookAID, newLogbookBID), LocalDateTime.of(LocalDate.now(), LocalTime.of(13, 30)));
+        assertThat(earliestDate00DayMinus3).isNotNull().isEqualTo(LocalDateTime.of(LocalDate.now().minusDays(3), shiftRanges[0][0]));
     }
 }

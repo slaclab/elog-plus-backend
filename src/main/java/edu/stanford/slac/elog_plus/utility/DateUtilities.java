@@ -1,10 +1,13 @@
 package edu.stanford.slac.elog_plus.utility;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import edu.stanford.slac.elog_plus.api.v1.dto.ShiftDTO;
+import edu.stanford.slac.elog_plus.model.Shift;
+
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class DateUtilities {
     public static String toUTCString(LocalTime localTime) {

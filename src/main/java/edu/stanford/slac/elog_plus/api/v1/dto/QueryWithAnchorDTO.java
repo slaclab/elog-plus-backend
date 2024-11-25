@@ -12,7 +12,7 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Builder
+@Builder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "The query parameter")
@@ -27,7 +27,9 @@ public record QueryWithAnchorDTO(
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonSerialize(using = LocalDateTimeSerializer.class)
         LocalDateTime endDate,
-        @Schema(description = "Include this number of entires before the startDate (used for hightlighting entries)")
+        @Schema(description = "Show entries tat belong to the last N shifts. If this parameter is set, the startDate and endDate are ignored.")
+        Integer lastNShifts,
+        @Schema(description = "Include this number of entries before the startDate (used for highlighting entries)")
         Integer contextSize,
         @Schema(description = "Limit the number the number of entries after the start date.")
         Integer limit,

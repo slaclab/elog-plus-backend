@@ -2143,4 +2143,158 @@ public class EntryServiceTest {
         assertThat(referencerEntry.references()).hasSize(1).extracting("id").contains(referencedEntryId);
         assertThat(referencedEntry.referencedBy()).hasSize(1).extracting("id").contains(referencerSupersedeEntryId);
     }
+
+    @Test
+    public void findLastNShiftOnSingleLogbook() {
+        var logbookTest = getTestLogbook();
+        LocalTime[][] shiftRanges = new LocalTime[3][2];
+        shiftRanges[0][0] = LocalTime.of(0, 0);
+        shiftRanges[0][1] = LocalTime.of(7, 59);
+        shiftRanges[1][0] = LocalTime.of(8, 0);
+        shiftRanges[1][1] = LocalTime.of(12, 59);
+        shiftRanges[2][0] = LocalTime.of(13, 0);
+        shiftRanges[2][1] = LocalTime.of(17, 59);
+        assertDoesNotThrow(
+                () -> {
+                    logbookService.replaceShift(
+                            logbookTest.id(),
+                            List.of(
+                                    ShiftDTO.builder().name("Shift1").from(DateUtilities.toUTCString(shiftRanges[0][0])).to(DateUtilities.toUTCString(shiftRanges[0][1])).build(),
+                                    ShiftDTO.builder().name("Shift2").from(DateUtilities.toUTCString(shiftRanges[1][0])).to(DateUtilities.toUTCString(shiftRanges[1][1])).build(),
+                                    ShiftDTO.builder().name("Shift3").from(DateUtilities.toUTCString(shiftRanges[2][0])).to(DateUtilities.toUTCString(shiftRanges[2][1])).build()
+                            )
+                    );
+                    return null;
+                }
+        );
+
+        // Create entries that cover those shifts for two days in the past each entry should be 30 minutes apart
+        LocalDateTime now = LocalDateTime.of(LocalDateTime.now().toLocalDate(), LocalTime.of(13, 30));
+        for (int idx = 0; idx < 3; idx++) {
+            for (int day = 0; day < 2; day++) {
+                for (int shift = 0; shift < 3; shift++) {
+                    int finalIdx = idx;
+                    int finalDay = day;
+                    int finalShift = shift;
+                    assertDoesNotThrow(
+                            () -> entryService.createNew(
+                                    EntryNewDTO
+                                            .builder()
+                                            .logbooks(Set.of(logbookTest.id()))
+                                            .text("This is a log for test")
+                                            .title("A very wonderful log")
+                                            .eventAt(
+                                                    now.minusDays(finalDay)
+                                                            .withHour(
+                                                                    shiftRanges[finalShift][0].getHour()
+                                                            )
+                                                            .withMinute(
+                                                                    shiftRanges[finalShift][0].getMinute()
+                                                            )
+                                            )
+                                            .build(),
+                                    sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
+                            )
+                    );
+                }
+            }
+        }
+
+        // find all entry for the last 1 shift ending to the 13:30
+        List<EntrySummaryDTO> found = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .lastNShifts(1)
+                                .endDate(now)
+                                .build()
+                )
+        );
+        assertThat(found).isNotNull().hasSize(3);
+        for (EntrySummaryDTO entry :
+                found) {
+            assertThat(entry.eventAt().toLocalTime()).isBetween(shiftRanges[2][0], shiftRanges[2][1]);
+        }
+
+        // now try to find all entry for the last 2 shifts ending to the 13:30
+        found = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .lastNShifts(2)
+                                .endDate(now)
+                                .build()
+                )
+        );
+        assertThat(found).isNotNull().hasSize(6);
+        for (EntrySummaryDTO entry :
+                found) {
+            assertThat(entry.eventAt().toLocalTime()).isBetween(shiftRanges[1][0], shiftRanges[2][1]);
+        }
+
+        // now try to find all entry for the last 3 shifts ending to the 13:30
+        found = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .lastNShifts(3)
+                                .endDate(now)
+                                .build()
+                )
+        );
+        assertThat(found).isNotNull().hasSize(9);
+        for (EntrySummaryDTO entry :
+                found) {
+            assertThat(entry.eventAt().toLocalTime()).isBetween(shiftRanges[0][0], shiftRanges[2][1]);
+        }
+
+        // now try to find all entry for the last 4 shifts ending to the 13:30
+        found = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(100)
+                                .logbooks(emptyList())
+                                .lastNShifts(4)
+                                .endDate(now)
+                                .build()
+                )
+        );
+        assertThat(found).isNotNull().hasSize(12);
+        for (EntrySummaryDTO entry :
+                found) {
+            assertThat(entry.eventAt().toLocalTime()).isBetween(shiftRanges[0][0], shiftRanges[2][1]);
+        }
+
+        // check that lastNShifts should be greater than 0 or null
+        assertThrows(
+                ControllerLogicException.class,
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(1)
+                                .logbooks(emptyList())
+                                .lastNShifts(0)
+                                .endDate(now)
+                                .build()
+                )
+        );
+        assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(1)
+                                .logbooks(emptyList())
+                                .endDate(now)
+                                .build()
+                )
+        );
+
+    }
 }

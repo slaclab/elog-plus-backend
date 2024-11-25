@@ -220,6 +220,8 @@ public class EntriesController {
             @RequestParam("startDate") Optional<LocalDateTime> startDate,
             @Parameter(name = "endDate", description = "Only include entries before this date. If not supplied, then does not apply any filter")
             @RequestParam("endDate") Optional<LocalDateTime> endDate,
+            @Parameter(name = "lastNShifts", description = "Show entries tat belong to the last N shifts. If this parameter is set, the startDate is ignored. The endDate if not specified will be the current time")
+            @RequestParam("lasNShifts") Optional<Integer> lasNShifts,
             @Parameter(name = "contextSize", description = "Include this number of entries before the startDate (used for highlighting entries)")
             @RequestParam("contextSize") Optional<Integer> contextSize,
             @Parameter(name = "limit", description = "Limit the number the number of entries after the start date.")
@@ -246,6 +248,7 @@ public class EntriesController {
                                 .anchorID(anchorId.orElse(null))
                                 .startDate(startDate.orElse(null))
                                 .endDate(endDate.orElse(null))
+                                .lastNShifts(lasNShifts.orElse(null))
                                 .contextSize(contextSize.orElse(0))
                                 .limit(limit.orElse(0))
                                 .search(search.orElse(null))

@@ -590,6 +590,7 @@ public class TestControllerHelperService {
                 anchor,
                 startDate,
                 endDate,
+                Optional.empty(),
                 contextSize,
                 limit,
                 search,
@@ -609,6 +610,7 @@ public class TestControllerHelperService {
             Optional<String> anchor,
             Optional<LocalDateTime> startDate,
             Optional<LocalDateTime> endDate,
+            Optional<Integer> lastNShifts,
             Optional<Integer> contextSize,
             Optional<Integer> limit,
             Optional<String> search,
@@ -624,6 +626,7 @@ public class TestControllerHelperService {
         anchor.ifPresent(string -> getBuilder.param("anchor", string));
         startDate.ifPresent(localDateTime -> getBuilder.param("startDate", String.valueOf(localDateTime)));
         endDate.ifPresent(localDateTime -> getBuilder.param("endDate", String.valueOf(localDateTime)));
+        lastNShifts.ifPresent(size -> getBuilder.param("lastNShifts", String.valueOf(size)));
         contextSize.ifPresent(size -> getBuilder.param("contextSize", String.valueOf(size)));
         limit.ifPresent(size -> getBuilder.param("limit", String.valueOf(size)));
         search.ifPresent(text -> getBuilder.param("search", text));
