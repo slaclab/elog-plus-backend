@@ -1,5 +1,6 @@
 package edu.stanford.slac.elog_plus.v1.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.ApiResultResponse;
 import edu.stanford.slac.ad.eed.baselib.config.AppProperties;
 import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
@@ -66,6 +67,8 @@ public class ImportControllerV2Test {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private ObjectMapper objectMapper = null;
 
     @BeforeEach
     public void preTest() {
@@ -223,6 +226,52 @@ public class ImportControllerV2Test {
         assertThat(alreadyFound.getErrorCode()).isEqualTo(-2);
     }
 
+    @Test
+    public void importEntityWithGT() {
+        var testLogbook = getTestLogbook("mcc", "user1@slac.stanford.edu");
+        String json_string = """
+                    {
+                    "originId": "XYZ_1331857",
+                    "logbooks": ["mcc"],
+                    "title": "* Re: use html escaped character--&gt; should now work",
+                            "text": "i use --&gt; also in the text",
+                            "lastName": "abc",
+                            "firstName": "deb",
+                            "userName": "abc",
+                            "tags": ["FACET"],
+                    "loggedAt": "2024-11-28T12:06:32",
+                            "eventAt": "2024-11-28T12:06:32"
+                }""";
+
+        ApiResultResponse<String> uploadResult = assertDoesNotThrow(
+                () -> testControllerHelperService.importEntryV1(
+                        mockMvc,
+                        status().isCreated(),
+                        Optional.of(
+                                "user3@slac.stanford.edu"
+                        ),
+                        objectMapper.readValue(json_string, EntryImportDTO.class)
+                )
+        );
+
+        assertThat(uploadResult).isNotNull();
+        assertThat(uploadResult.getErrorCode()).isEqualTo(0);
+
+        ApiResultResponse<EntryDTO> fullLog = assertDoesNotThrow(
+                () -> testControllerHelperService.getFullLog(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of(
+                                "user1@slac.stanford.edu"
+                        ),
+                        uploadResult.getPayload()
+                )
+        );
+        assertThat(fullLog.getPayload().title()).isEqualTo("* Re: use html escaped character--> should now work");
+        assertThat(fullLog.getPayload().text()).contains("-->");
+
+    }
+
     private ApiResultResponse<LogbookDTO> getTestLogbook() {
         return getTestLogbook("user1@slac.stanford.edu");
     }
@@ -238,6 +287,33 @@ public class ImportControllerV2Test {
                         NewLogbookDTO
                                 .builder()
                                 .name(UUID.randomUUID().toString())
+                                .build()
+                ));
+        assertThat(logbookCreationResult).isNotNull();
+        assertThat(logbookCreationResult.getErrorCode()).isEqualTo(0);
+        return assertDoesNotThrow(
+                () -> testControllerHelperService.getLogbookByID(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of(
+                                "user1@slac.stanford.edu"
+                        ),
+                        logbookCreationResult.getPayload()
+                )
+        );
+    }
+
+    private ApiResultResponse<LogbookDTO> getTestLogbook(String logbookName, String withUserEmail) {
+        ApiResultResponse<String> logbookCreationResult = assertDoesNotThrow(
+                () -> testControllerHelperService.createNewLogbook(
+                        mockMvc,
+                        status().isCreated(),
+                        Optional.of(
+                                withUserEmail
+                        ),
+                        NewLogbookDTO
+                                .builder()
+                                .name(logbookName)
                                 .build()
                 ));
         assertThat(logbookCreationResult).isNotNull();

@@ -10,12 +10,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-@Builder(toBuilder=true)
+@Builder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Is the model for the new ELog creation")
@@ -57,5 +58,7 @@ public record EntryImportDTO(
 ) {
     public EntryImportDTO {
         if (tags == null) tags = Collections.emptyList();
+        title = StringEscapeUtils.unescapeHtml4(title); // Decode HTML entities
+        text = StringEscapeUtils.unescapeHtml4(text);
     }
 }

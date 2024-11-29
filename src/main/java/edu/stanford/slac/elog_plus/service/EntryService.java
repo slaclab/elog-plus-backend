@@ -333,9 +333,9 @@ public class EntryService {
                         .errorDomain("LogService::createNew")
                         .build()
         );
-        newEntry.setTitle(
-                StringUtilities.sanitizeEntryTitle(newEntry.getTitle())
-        );
+//        newEntry.setTitle(
+//                StringUtilities.sanitizeEntryTitle(newEntry.getTitle())
+//        );
 
         assertion(
                 () -> (finalNewEntry1.getText() != null),

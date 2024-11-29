@@ -32,7 +32,7 @@ public class StringUtilities {
                 ).replaceAll("[^\\p{ASCII}]", "");
     }
     public static String sanitizeEntryTitle(String title) {
-        return Jsoup.clean(title, Safelist.basic());
+        return Jsoup.clean(title, Safelist.basicWithImages());
     }
 
     public static String sanitizeEntryText(String text) {
