@@ -32,6 +32,7 @@ import static edu.stanford.slac.ad.eed.baselib.exception.Utility.assertion;
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.wrapCatch;
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF;
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF_ID;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.ENTRIES;
 import static java.util.Collections.emptyList;
 
 @Service
@@ -632,7 +633,7 @@ public class EntryService {
      * @return the id of the new supersede log
      */
     @Transactional
-    @CacheEvict(value = "entries", allEntries = true)
+    @CacheEvict(value = ENTRIES, allEntries = true)
     public String createNewSupersede(String entryId, EntryNewDTO newLog, PersonDTO creator) {
         // fetches the log to supersede
         Entry supersededLog =
@@ -739,7 +740,7 @@ public class EntryService {
      * @return the id of the new follow-up log
      */
     @Transactional
-    @CacheEvict(value = "entries", allEntries = true)
+    @CacheEvict(value = ENTRIES, allEntries = true)
     public String createNewFollowUp(String id, EntryNewDTO newLog, PersonDTO personDTO) {
         Entry rootLog =
                 wrapCatch(

@@ -14,6 +14,7 @@ import edu.stanford.slac.elog_plus.api.v1.mapper.AuthorizationMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.assertion;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.AUTHORIZATIONS;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.LOGBOOKS;
 
 @Service
 @Log4j2
 @AllArgsConstructor
 public class AuthorizationServices {
+
     AuthService authService;
     AppProperties appProperties;
     PeopleGroupService peopleGroupService;
@@ -69,6 +73,7 @@ public class AuthorizationServices {
      * @param includeAuthorizations if true include the authorizations
      * @return the user details
      */
+    @Cacheable(value = AUTHORIZATIONS, key = "'user-byId'+ #userId +'includeAuth'+ #includeAuthorizations +'includeMembers'+ #includeInheritance")
     public UserDetailsDTO findUser(String userId, Boolean includeAuthorizations, Boolean includeInheritance) {
         // found users
         var foundUser = peopleGroupService.findPersonByEMail(userId);
@@ -94,6 +99,7 @@ public class AuthorizationServices {
      * @param includeAuthorizations if true include the authorizations
      * @return the group details
      */
+    @Cacheable(value = AUTHORIZATIONS, key = "'groupBy-byId'+ #localGroupId +'includeAuth'+ #includeAuthorizations +'includeMembers'+ #includeMembers")
     public GroupDetailsDTO findGroup(String localGroupId, Boolean includeMembers, Boolean includeAuthorizations) {
         // find the group
         LocalGroupDTO groupFound = authService.findLocalGroupById(localGroupId);
@@ -130,6 +136,11 @@ public class AuthorizationServices {
                         )
                 .build();
 
+    }
+
+    @Cacheable(value = AUTHORIZATIONS, key = "'findPersonByEMail'+ #email")
+    public PersonDTO findPersonByEMail(String email) {
+        return peopleGroupService.findPersonByEMail(email);
     }
 
     /**
@@ -186,6 +197,7 @@ public class AuthorizationServices {
      * @param includeAuthorizations if true include the authorizations
      * @return the user details
      */
+    @Cacheable(value = AUTHORIZATIONS, key = "'application-byId'+ #applicationId +'includeAuth'+ #includeAuthorizations")
     public ApplicationDetailsDTO getApplicationById(String applicationId, boolean includeAuthorizations) {
         log.info("Finding application with id {}", applicationId);
         var authTokenFound = authService.getAuthenticationTokenById(applicationId).orElseThrow(
@@ -208,7 +220,7 @@ public class AuthorizationServices {
                                         )
                         ) :
                 Collections.emptyList();
-        if(auhtorizationList.size()>0) {
+        if(!auhtorizationList.isEmpty()) {
             log.info("Found {} authorizations for application {}", auhtorizationList.size(), authTokenFound);
         }
         return ApplicationDetailsDTO.builder()
@@ -267,7 +279,7 @@ public class AuthorizationServices {
      *
      * @param newAuthorizationDTO the new authorization to create
      */
-    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value = {LOGBOOKS, AUTHORIZATIONS}, allEntries = true)
     public void createNew(NewAuthorizationDTO newAuthorizationDTO) {
         // check the resourceType type
         String resource = getResource(newAuthorizationDTO);
@@ -361,7 +373,7 @@ public class AuthorizationServices {
      *
      * @param authorizationId the id of the authorization to delete
      */
-    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value =  {LOGBOOKS, AUTHORIZATIONS}, allEntries = true)
     public void deleteAuthorization(String authorizationId) {
         var authorizationFound = authService.findAuthorizationById(authorizationId);
         log.info("Deleting authorization {} by {}", authorizationFound, getCurrentUsername());
@@ -375,7 +387,7 @@ public class AuthorizationServices {
      * @param updateAuthorizationDTO the update information
      */
     @Transactional
-    @CacheEvict(value = "logbooks", allEntries = true)
+    @CacheEvict(value =  {LOGBOOKS, AUTHORIZATIONS}, allEntries = true)
     public void updateAuthorization(String authorizationId, UpdateAuthorizationDTO updateAuthorizationDTO) {
         var authorizationFound = authService.findAuthorizationById(authorizationId);
         authService.updateAuthorizationType(authorizationId, updateAuthorizationDTO.permission());
@@ -405,6 +417,7 @@ public class AuthorizationServices {
      *
      * @param applicationId the id of the application to delete
      */
+    @CacheEvict(value =  {LOGBOOKS, AUTHORIZATIONS}, allEntries = true)
     public void deleteApplication(String applicationId) {
         authService.deleteToken(applicationId);
     }

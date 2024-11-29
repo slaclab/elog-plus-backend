@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
+import static edu.stanford.slac.elog_plus.config.CacheConfig.LOGBOOKS;
+
 /**
  * Repository for the logbooks managements
  */
@@ -17,7 +19,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
 
     @NotNull
     @Override
-    @Cacheable(value = "logbooks", key = "#id")
+    @Cacheable(value = LOGBOOKS, key = "#id")
     Optional<Logbook> findById(@NotNull String id);
 
     /**
@@ -26,7 +28,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param id the id of the logbook
      * @return true if the logbook exists, false otherwise
      */
-    @Cacheable(value = "logbooks", key = "'exists_by_id_'+#id")
+    @Cacheable(value = LOGBOOKS, key = "'exists_by_id_'+#id")
     boolean existsById(String id);
 
     /**
@@ -35,7 +37,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param name the name of the logbook
      * @return true if the logbook exists, false otherwise
      */
-    @Cacheable(value = "logbooks", key = "'exists_by_name'+#name")
+    @Cacheable(value = LOGBOOKS, key = "'exists_by_name'+#name")
     boolean existsByName(String name);
 
     /**
@@ -44,7 +46,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param logbookName the name of the logbook
      * @return the logbook if it exists
      */
-    @Cacheable(value = "logbooks", key = "'find_by_name'+#logbookName")
+    @Cacheable(value = LOGBOOKS, key = "'find_by_name'+#logbookName")
     Optional<Logbook> findByName(String logbookName);
 
     /**
@@ -53,7 +55,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param logbookIds the ids of the logbook
      * @return the logbook if it exists
      */
-    @Cacheable(value = "logbooks", key = "'t_id_'+#tagId + '_logbooks_' + T(java.lang.String).join(',', #logbookIds)")
+    @Cacheable(value = LOGBOOKS, key = "'t_id_'+#tagId + '_logbooks_' + T(java.lang.String).join(',', #logbookIds)")
     boolean existsByIdInAndTagsIdIs(List<String> logbookIds, String tagId);
 
     /**
@@ -62,7 +64,7 @@ public interface LogbookRepository extends MongoRepository<Logbook, String>, Log
      * @param tagId the ids of the logbook
      * @return the logbook if it exists
      */
-    @Cacheable(value = "logbooks", key = "'by_tag_id'+#tagId")
+    @Cacheable(value = LOGBOOKS, key = "'by_tag_id'+#tagId")
     Optional<Logbook> findByTagsIdIs(String tagId);
 
     /**

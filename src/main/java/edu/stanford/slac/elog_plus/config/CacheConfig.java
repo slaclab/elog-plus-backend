@@ -13,6 +13,11 @@ import org.springframework.context.annotation.Configuration;
 @EnableCaching
 @Configuration
 public class CacheConfig {
+    public static final String TAGS = "tags";
+    public static final String ENTRIES = "entries";
+    public static final String LOGBOOKS = "logbooks";
+    public static final String AUTHORIZATIONS = "authorizations";
+
     @Bean
     public HazelcastCacheManager cacheManager(HazelcastInstance hazelcastInstance) {
         // log all configured caches

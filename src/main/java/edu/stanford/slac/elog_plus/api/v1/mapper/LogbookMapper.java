@@ -1,6 +1,5 @@
 package edu.stanford.slac.elog_plus.api.v1.mapper;
 
-import edu.stanford.slac.ad.eed.base_mongodb_lib.repository.AuthenticationTokenRepository;
 import edu.stanford.slac.ad.eed.base_mongodb_lib.repository.AuthorizationRepository;
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationDTO;
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationOwnerTypeDTO;
@@ -10,9 +9,7 @@ import edu.stanford.slac.ad.eed.baselib.api.v1.mapper.AuthMapper;
 import edu.stanford.slac.ad.eed.baselib.config.AppProperties;
 import edu.stanford.slac.ad.eed.baselib.model.Authorization;
 import edu.stanford.slac.ad.eed.baselib.model.AuthorizationOwnerType;
-import edu.stanford.slac.ad.eed.baselib.service.PeopleGroupService;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
-import edu.stanford.slac.elog_plus.config.ELOGAppProperties;
 import edu.stanford.slac.elog_plus.model.Entry;
 import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.service.AuthorizationServices;
@@ -35,15 +32,9 @@ public abstract class LogbookMapper {
     @Autowired
     protected AuthorizationRepository authorizationRepository;
     @Autowired
-    protected AuthenticationTokenRepository authenticationTokenRepository;
-    @Autowired
     protected AuthMapper authMapper;
     @Autowired
     protected AppProperties appProperties;
-    @Autowired
-    protected ELOGAppProperties elogAppProperties;
-    @Autowired
-    protected PeopleGroupService peopleGroupService;
     @Autowired
     protected AuthorizationServices authorizationServices;
 
@@ -117,7 +108,7 @@ public abstract class LogbookMapper {
         String ownerLabel = authorization.owner();
         switch(authorization.ownerType()){
             case User: {
-                PersonDTO person = peopleGroupService.findPersonByEMail(authorization.owner());
+                PersonDTO person = authorizationServices.findPersonByEMail(authorization.owner());
                 ownerLabel = person != null ? person.gecos() : null;
                 break;
             }

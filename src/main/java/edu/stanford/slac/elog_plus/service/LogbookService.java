@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.assertion;
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.wrapCatch;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.LOGBOOKS;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.TAGS;
 
 @Log4j2
 @Service
@@ -142,7 +144,7 @@ public class LogbookService {
      * @param newLogbookDTO the new logbooks
      * @return the id of the newly created logbooks
      */
-    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
+    @CacheEvict(value = {LOGBOOKS, TAGS}, allEntries = true)
     public String createNew(NewLogbookDTO newLogbookDTO) {
         // normalize the name
         newLogbookDTO = newLogbookDTO.toBuilder()
@@ -185,7 +187,7 @@ public class LogbookService {
      * @param logbookDTO the updated logbooks
      */
     @Transactional
-    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
+    @CacheEvict(value = {LOGBOOKS, TAGS}, allEntries = true)
     public LogbookDTO update(String logbookId, UpdateLogbookDTO logbookDTO) {
         // check if id exists
         Logbook lbToUpdated = wrapCatch(
@@ -429,7 +431,7 @@ public class LogbookService {
      * @param logbookId the logbook id
      * @return the full logbooks
      */
-    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId")
+    @Cacheable(value = LOGBOOKS, key = "'getLogbook-' + #logbookId")
     public LogbookDTO getLogbook(String logbookId) {
         return getLogbook(logbookId, Optional.empty());
     }
@@ -460,7 +462,7 @@ public class LogbookService {
      * @param logbookId the logbooks id
      * @return the full logbooks
      */
-    @Cacheable(value = "logbooks", key = "'getLogbook-' + #logbookId +'_'+ #includeAuthorizations.orElse(false)")
+    @Cacheable(value = LOGBOOKS, key = "'getLogbook-' + #logbookId +'_'+ #includeAuthorizations.orElse(false)")
     public LogbookDTO getLogbook(String logbookId, Optional<Boolean> includeAuthorizations) {
         return wrapCatch(
                 () -> logbookRepository.findById(
@@ -610,7 +612,7 @@ public class LogbookService {
      * @param tagName   the name of the tag
      * @return true if the tag exists
      */
-    @Cacheable(value = "tags", key = "'tagExistForLogbook-' + #logbookId + '_' + #tagName")
+    @Cacheable(value = TAGS, key = "'tagExistForLogbook-' + #logbookId + '_' + #tagName")
     public Boolean tagExistForLogbook(String logbookId, String tagName) {
         return wrapCatch(
                 () -> logbookRepository.tagExistByName(
@@ -743,7 +745,7 @@ public class LogbookService {
      * @param allNewShift all the new shift
      */
     @Transactional()
-    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
+    @CacheEvict(value = {LOGBOOKS, TAGS}, allEntries = true)
     public void replaceShift(String logbookId, List<ShiftDTO> allNewShift) {
         Optional<Logbook> lb =
                 wrapCatch(
@@ -787,7 +789,7 @@ public class LogbookService {
      * @param newShiftDTO the shift description
      */
     @Transactional(propagation = Propagation.NESTED)
-    @CacheEvict(value = {"logbooks", "tags"}, allEntries = true)
+    @CacheEvict(value = {LOGBOOKS, TAGS}, allEntries = true)
     public String addShift(String logbookId, NewShiftDTO newShiftDTO) {
         // validate the shift
         Shift shiftToAdd = validateShift(shiftMapper.fromDTO(newShiftDTO), -1, "LogbookService:addShift");

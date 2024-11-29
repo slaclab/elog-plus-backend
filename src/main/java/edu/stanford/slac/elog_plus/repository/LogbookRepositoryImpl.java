@@ -18,6 +18,7 @@ import java.time.LocalTime;
 import java.util.*;
 
 import static edu.stanford.slac.ad.eed.baselib.exception.Utility.assertion;
+import static edu.stanford.slac.elog_plus.config.CacheConfig.TAGS;
 
 
 @Repository
@@ -233,7 +234,7 @@ public class LogbookRepositoryImpl implements LogbookRepositoryCustom {
     }
 
     @Override
-    @Cacheable(value = "tags", key = "'by_id_'+#tagId")
+    @Cacheable(value = TAGS, key = "'by_id_'+#tagId")
     public Optional<Tag> getTagsByID(String tagId) {
         Query q = new Query();
         q.addCriteria(
