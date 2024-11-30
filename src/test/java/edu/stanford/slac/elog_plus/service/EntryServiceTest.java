@@ -2038,6 +2038,84 @@ public class EntryServiceTest {
     }
 
     @Test
+    public void testReferencesOkWithCache() {
+        var logbook = getTestLogbook();
+        String referencedEntryId = assertDoesNotThrow(
+                () -> entryService.createNew(
+                        EntryNewDTO
+                                .builder()
+                                .logbooks(Set.of(logbook.id()))
+                                .title("Referenced entry")
+                                .text("This is a log for a referenced entry")
+                                .build(),
+                        sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
+                )
+        );
+        assertThat(referencedEntryId).isNotNull();
+
+        // get entry to cache it
+        EntryDTO referencedEntry = assertDoesNotThrow(
+                () -> entryService.getFullEntry(
+                        referencedEntryId,
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true)
+                )
+        );
+        assertThat(referencedEntry).isNotNull();
+
+        Element fragment = new Element("div");
+        fragment.appendText("This is a text with reference");
+        fragment.appendElement(ELOG_ENTRY_REF).attr(ELOG_ENTRY_REF_ID, referencedEntryId);
+
+        String referencerEntryId = assertDoesNotThrow(
+                () -> entryService.createNew(
+                        EntryNewDTO
+                                .builder()
+                                .logbooks(Set.of(logbook.id()))
+                                .title("New entry")
+                                .text(sharedUtilityService.createReferenceHtmlFragment("text for the reference entry", List.of(referencedEntryId)))
+                                .build(),
+                        sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu")
+                )
+        );
+        assertThat(referencerEntryId).isNotNull();
+
+        //fetch referencer
+        EntryDTO referencerEntry = assertDoesNotThrow(
+                () -> entryService.getFullEntry(
+                        referencerEntryId,
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true)
+
+                )
+        );
+        assertThat(referencerEntry.references()).hasSize(1).extracting("id").contains(referencedEntryId);
+        assertThat(sharedUtilityService.htmlContainsReferenceWithId(referencerEntry.text(), referencedEntryId)).isTrue();
+        //fetch referenced
+        EntryDTO referencedEntry2 = assertDoesNotThrow(
+                () -> entryService.getFullEntry(
+                        referencedEntryId,
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(true),
+                        Optional.of(true)
+                )
+        );
+
+        assertThat(referencedEntry2.referencedBy()).hasSize(1).extracting("id").contains(referencerEntryId);
+    }
+
+    @Test
     public void testReferencesFailsOnBadReferenceId() {
         var logbook = getTestLogbook();
 

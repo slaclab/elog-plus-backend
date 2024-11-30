@@ -6,13 +6,11 @@ import edu.stanford.slac.ad.eed.baselib.service.PeopleGroupService;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
 import edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper;
 import edu.stanford.slac.elog_plus.api.v1.mapper.QueryParameterMapper;
+import edu.stanford.slac.elog_plus.cache.CacheEvictReferenced;
 import edu.stanford.slac.elog_plus.exception.*;
 import edu.stanford.slac.elog_plus.model.Entry;
-import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.model.Summarizes;
 import edu.stanford.slac.elog_plus.repository.EntryRepository;
-import edu.stanford.slac.elog_plus.utility.DateUtilities;
-import edu.stanford.slac.elog_plus.utility.StringUtilities;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -184,6 +182,7 @@ public class EntryService {
      * @return the id of the newly created log
      */
     @Transactional
+    @CacheEvictReferenced(cacheName = ENTRIES)
     public String createNew(EntryNewDTO entryNewDTO, PersonDTO personDTO) {
         return createNew(
                 toModelWithCreator(
@@ -228,14 +227,10 @@ public class EntryService {
      * @return the id of the newly created log
      */
     @Transactional()
+    @CacheEvictReferenced(cacheName = ENTRIES)
     public String createNew(Entry newEntry) {
         //get and check for logbooks
         Entry finalNewEntry = newEntry;
-
-        // be sure that entry has not double logbooks, remove the double logbooks id
-//        newEntry.setLogbooks(
-//                newEntry.getLogbooks().stream().distinct().toList()
-//        );
 
         // verify that all logbook exists
         assertion(
@@ -333,9 +328,6 @@ public class EntryService {
                         .errorDomain("LogService::createNew")
                         .build()
         );
-//        newEntry.setTitle(
-//                StringUtilities.sanitizeEntryTitle(newEntry.getTitle())
-//        );
 
         assertion(
                 () -> (finalNewEntry1.getText() != null),
@@ -681,58 +673,6 @@ public class EntryService {
     }
 
     /**
-     * Update the references to the old entry with the new id
-     *
-     * @param entryId        the id of the entry that has been superseded
-     * @param supersededById the id of the new superseded entry
-     */
-    private void updateReferences(String entryId, String supersededById) {
-        // find al entry that reference to the original one
-        List<Entry> referenceEntries = wrapCatch(
-                () -> entryRepository.findAllByReferencesContainsAndSupersededByExists(entryId, false),
-                -1,
-                "LogService::updateReferences"
-        );
-        // now for each one update the reference
-        referenceEntries.forEach(
-                entry -> {
-                    entry.getReferences().remove(entryId);
-                    entry.getReferences().add(supersededById);
-                    entry.setText(updateHtmlReferenceTag(entry.getText(), entryId, supersededById));
-                    wrapCatch(
-                            () -> entryRepository.save(entry),
-                            -2,
-                            "LogService::updateReferences"
-                    );
-                }
-        );
-    }
-
-    /**
-     * Update the reference in the text
-     *
-     * @param text           the text to update
-     * @param entryId        the id to replace
-     * @param supersededById the new id
-     * @return the updated text
-     */
-    private String updateHtmlReferenceTag(String text, String entryId, String supersededById) {
-        // scan document text and update the reference
-        Document document = Jsoup.parseBodyFragment(text);
-        Elements elements = document.select(ELOG_ENTRY_REF);
-        for (Element element : elements) {
-            // Get the 'id' attribute
-            if (!element.hasAttr(ELOG_ENTRY_REF_ID)) continue;
-            String id = element.attr(ELOG_ENTRY_REF_ID);
-            // check if the found id is one that we need to change
-            if (id.isEmpty() || id.compareToIgnoreCase(entryId) != 0) continue;
-            // update id
-            element.attr(ELOG_ENTRY_REF_ID, supersededById);
-        }
-        return document.body().html();
-    }
-
-    /**
      * Create a new follow-up for a specific log
      *
      * @param id     the id for the log the need to be followed
@@ -797,12 +737,56 @@ public class EntryService {
                 .collect(Collectors.toList());
     }
 
-    public List<String> getAllTags() {
-        return wrapCatch(
-                entryRepository::getAllTags,
+    /**
+     * Update the references to the old entry with the new id
+     *
+     * @param entryId        the id of the entry that has been superseded
+     * @param supersededById the id of the new superseded entry
+     */
+    private void updateReferences(String entryId, String supersededById) {
+        // find al entry that reference to the original one
+        List<Entry> referenceEntries = wrapCatch(
+                () -> entryRepository.findAllByReferencesContainsAndSupersededByExists(entryId, false),
                 -1,
-                "LogService::getAllTags"
+                "LogService::updateReferences"
         );
+        // now for each one update the reference
+        referenceEntries.forEach(
+                entry -> {
+                    entry.getReferences().remove(entryId);
+                    entry.getReferences().add(supersededById);
+                    entry.setText(updateHtmlReferenceTag(entry.getText(), entryId, supersededById));
+                    wrapCatch(
+                            () -> entryRepository.save(entry),
+                            -2,
+                            "LogService::updateReferences"
+                    );
+                }
+        );
+    }
+
+    /**
+     * Update the reference in the text
+     *
+     * @param text           the text to update
+     * @param entryId        the id to replace
+     * @param supersededById the new id
+     * @return the updated text
+     */
+    private String updateHtmlReferenceTag(String text, String entryId, String supersededById) {
+        // scan document text and update the reference
+        Document document = Jsoup.parseBodyFragment(text);
+        Elements elements = document.select(ELOG_ENTRY_REF);
+        for (Element element : elements) {
+            // Get the 'id' attribute
+            if (!element.hasAttr(ELOG_ENTRY_REF_ID)) continue;
+            String id = element.attr(ELOG_ENTRY_REF_ID);
+            // check if the found id is one that we need to change
+            if (id.isEmpty() || id.compareToIgnoreCase(entryId) != 0) continue;
+            // update id
+            element.attr(ELOG_ENTRY_REF_ID, supersededById);
+        }
+        return document.body().html();
     }
 
     /**

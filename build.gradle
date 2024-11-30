@@ -68,6 +68,7 @@ dependencies {
             'org.springframework.boot:spring-boot-starter-validation',
             'org.springframework.boot:spring-boot-starter-mail',
             'org.springframework.boot:spring-boot-starter-thymeleaf',
+            'org.springframework.boot:spring-boot-starter-aop',
             'io.micrometer:micrometer-registry-prometheus',
             'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0',
             'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0',
