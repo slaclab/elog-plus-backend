@@ -133,7 +133,7 @@ public class AttachmentControllerTest {
 
     @Test
     public void downloadAttachment() throws Exception {
-        var newLogBookResult =  testControllerHelperService.getTestLogbook(mockMvc);
+        var newLogBookResult = testControllerHelperService.getTestLogbook(mockMvc);
 
         Faker f = new Faker();
         String fileName = f.file().fileName();
@@ -187,7 +187,7 @@ public class AttachmentControllerTest {
 
     @Test
     public void downloadAttachmentAndPreview() throws Exception {
-        var newLogBookResult =  testControllerHelperService.getTestLogbook(mockMvc);
+        var newLogBookResult = testControllerHelperService.getTestLogbook(mockMvc);
 
         try (InputStream is = documentGenerationService.getTestPng()) {
             ApiResultResponse<String> newAttachmentID = testControllerHelperService.newAttachment(
@@ -239,8 +239,8 @@ public class AttachmentControllerTest {
                     () -> {
                         String processingState = attachmentService.getPreviewProcessingState(newAttachmentID.getPayload());
                         return processingState.compareTo(
-                                        Attachment.PreviewProcessingState.Completed.name()
-                                )==0;
+                                Attachment.PreviewProcessingState.Completed.name()
+                        ) == 0;
                     }
             );
 
@@ -254,5 +254,73 @@ public class AttachmentControllerTest {
                     MediaType.IMAGE_JPEG_VALUE
             );
         }
+    }
+
+    @Test
+    public void checkCacheControlOnPreview() throws Exception {
+        ApiResultResponse<String> newAttachmentID = null;
+        var newLogBookResult = testControllerHelperService.getTestLogbook(mockMvc);
+
+        try (InputStream is = documentGenerationService.getTestPng()) {
+            newAttachmentID = testControllerHelperService.newAttachment(
+                    mockMvc,
+                    status().isCreated(),
+                    Optional.of(
+                            "user1@slac.stanford.edu"
+                    ),
+                    new MockMultipartFile(
+                            "uploadFile",
+                            "test.png",
+                            MediaType.IMAGE_PNG_VALUE,
+                            is
+                    )
+            );
+
+            ApiResultResponse<String> finalNewAttachmentID = newAttachmentID;
+            ApiResultResponse<String> newLogID =
+                    assertDoesNotThrow(
+                            () ->
+                                    testControllerHelperService.createNewLog(
+                                            mockMvc,
+                                            status().isCreated(),
+                                            Optional.of(
+                                                    "user1@slac.stanford.edu"
+                                            ),
+                                            EntryNewDTO
+                                                    .builder()
+                                                    .logbooks(Set.of(newLogBookResult.getPayload().id()))
+                                                    .attachments(Set.of(finalNewAttachmentID.getPayload()))
+                                                    .text("This is a log for test")
+                                                    .title("A very wonderful log")
+                                                    .build()
+                                    )
+                    );
+
+            assertThat(newLogID.getErrorCode()).isEqualTo(0);
+        }
+
+        ApiResultResponse<String> finalNewAttachmentID1 = newAttachmentID;
+        await().atMost(30, SECONDS).pollDelay(500, MILLISECONDS).until(
+                () -> {
+                    String processingState = attachmentService.getPreviewProcessingState(finalNewAttachmentID1.getPayload());
+                    return processingState.compareTo(
+                            Attachment.PreviewProcessingState.Completed.name()
+                    ) == 0;
+                }
+        );
+
+        assertThat(newAttachmentID).isNotNull();
+        var previewResponse = testControllerHelperService.getPreviewPreview(
+                mockMvc,
+                status().isOk(),
+                Optional.of(
+                        "user1@slac.stanford.edu"
+                ),
+                newAttachmentID.getPayload(),
+                MediaType.IMAGE_JPEG_VALUE
+        );
+
+        assertThat(previewResponse.getHeader("Cache-Control")).isEqualTo("max-age=15552000, public");
+        assertThat(previewResponse.getContentAsByteArray().length).isGreaterThan(0);
     }
 }

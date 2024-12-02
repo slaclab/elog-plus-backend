@@ -17,6 +17,7 @@ import edu.stanford.slac.elog_plus.service.SharedUtilityService;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockPart;
 import org.springframework.stereotype.Service;
@@ -214,6 +215,35 @@ public class TestControllerHelperService {
         AssertionsForClassTypes.assertThat(result.getResponse().getContentType()).isEqualTo(mediaType);
     }
 
+    /**
+     * Get all queued attachments
+     *
+     * @param mockMvc       MockMvc
+     * @param resultMatcher ResultMatcher
+     * @param userInfo      Optional<String>
+     * @return ApiResultResponse<List<AttachmentDTO>>
+     * @throws Exception Exception
+     */
+    public MockHttpServletResponse getPreviewPreview(
+            MockMvc mockMvc,
+            ResultMatcher resultMatcher,
+            Optional<String> userInfo,
+            String attachmentID,
+            String mediaType) throws Exception {
+        var requestBuilder = get("/v1/attachment/{id}/preview.jpg", attachmentID)
+                .contentType(mediaType);
+        userInfo.ifPresent(login -> requestBuilder.header(appProperties.getUserHeaderName(), jwtHelper.generateJwt(login)));
+        MvcResult result = mockMvc.perform(
+                        requestBuilder
+                )
+                .andExpect(resultMatcher)
+                .andReturn();
+        Optional<ControllerLogicException> someException = Optional.ofNullable((ControllerLogicException) result.getResolvedException());
+        if (someException.isPresent()) {
+            throw someException.get();
+        }
+        return result.getResponse();
+    }
 
     public ApiResultResponse<List<AttachmentDTO>> attachmentControllerFindAllQueued(
             MockMvc mockMvc,

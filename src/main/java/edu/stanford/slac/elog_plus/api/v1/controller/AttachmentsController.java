@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationTypeDTO.Read;
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationTypeDTO.Write;
@@ -112,6 +113,7 @@ public class AttachmentsController {
                         .filename(desc.getFileName(), StandardCharsets.UTF_8)
                         .build()
         );
+        headers.setCacheControl(CacheControl.maxAge(15552000, TimeUnit.SECONDS).cachePublic());
         return new ResponseEntity<>(new InputStreamResource(desc.getIs()), headers, HttpStatus.OK);
     }
 
