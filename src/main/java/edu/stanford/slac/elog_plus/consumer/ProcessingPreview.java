@@ -12,12 +12,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.tasks.UnsupportedFormatException;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.detect.Detector;
-import org.apache.tika.metadata.Metadata;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -28,9 +23,11 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -82,7 +79,7 @@ public class ProcessingPreview {
             // crete preview
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             Thumbnails.of(new ByteArrayInputStream(imageBytes))
-                    .size(1024, 1024)
+                    .width(1024)
                     .outputFormat("jpg")
                     .toOutputStream(baos);
             storageRepository.uploadFile(
@@ -133,34 +130,42 @@ public class ProcessingPreview {
     private byte[] getFromPS(InputStream is) throws IOException, InterruptedException {
         byte[] imageBytes = null;
         Path tmpPSFilePath = null;
-        Path tmpPDFFilePath = null;
+        Path tmpJPEGFilePath = null;
         try {
+            // Temporary paths for PostScript and JPEG files
             tmpPSFilePath = Files.createTempFile("psTempFile_%s".formatted(UUID.randomUUID()), ".ps");
-            tmpPDFFilePath = Files.createTempFile("pdfTempFile_%s".formatted(UUID.randomUUID()), ".pdf");
+            tmpJPEGFilePath = Files.createTempFile("jpegTempFile_%s".formatted(UUID.randomUUID()), ".jpg");
+
+            // Write the input PostScript data to the temporary file
             Files.write(tmpPSFilePath, is.readAllBytes(), StandardOpenOption.WRITE);
+
+            // Build Ghostscript command for JPEG conversion
             ProcessBuilder processBuilder = new ProcessBuilder(
                     "gs",
                     "-dNOPAUSE",
                     "-dBATCH",
-                    "-sDEVICE=pdfwrite",
-                    "-sOutputFile=" + tmpPDFFilePath.toString(),
+                    "-sDEVICE=jpeg",
+                    "-r300", // Set resolution (adjust as needed)
+                    "-dJPEGQ=95", // Set JPEG quality (1-100)
+                    "-sOutputFile=" + tmpJPEGFilePath.toString(),
                     tmpPSFilePath.toString()
             );
 
+            // Execute the Ghostscript process
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                throw new IOException("Ghostscript failed to convert PS to PDF. Exit code: " + exitCode);
+                throw new IOException("Ghostscript failed to convert PS to JPEG. Exit code: " + exitCode);
             }
-            // get pdf file input stream
-            try (InputStream pdfInputStream = Files.newInputStream(tmpPDFFilePath)) {
-                //convert pdf to image
-                imageBytes = getFromPDF(pdfInputStream);
-            }
+
+            // Read the generated JPEG into a byte array
+            imageBytes = Files.readAllBytes(tmpJPEGFilePath);
+
         } finally {
-            if (tmpPSFilePath != null) Files.delete(tmpPSFilePath);
-            if (tmpPDFFilePath != null) Files.delete(tmpPDFFilePath);
+            // Clean up temporary files
+            if (tmpPSFilePath != null) Files.deleteIfExists(tmpPSFilePath);
+            if (tmpJPEGFilePath != null) Files.deleteIfExists(tmpJPEGFilePath);
         }
         return imageBytes;
     }

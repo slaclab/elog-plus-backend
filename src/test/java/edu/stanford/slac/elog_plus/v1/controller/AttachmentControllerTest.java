@@ -39,8 +39,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -261,7 +260,7 @@ public class AttachmentControllerTest {
         ApiResultResponse<String> newAttachmentID = null;
         var newLogBookResult = testControllerHelperService.getTestLogbook(mockMvc);
 
-        try (InputStream is = documentGenerationService.getTestPng()) {
+        try (InputStream is = documentGenerationService.getTestPS()) {
             newAttachmentID = testControllerHelperService.newAttachment(
                     mockMvc,
                     status().isCreated(),
@@ -270,8 +269,8 @@ public class AttachmentControllerTest {
                     ),
                     new MockMultipartFile(
                             "uploadFile",
-                            "test.png",
-                            MediaType.IMAGE_PNG_VALUE,
+                            "test.ps",
+                            "application/ps",
                             is
                     )
             );
