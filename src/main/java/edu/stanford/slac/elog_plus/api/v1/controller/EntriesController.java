@@ -232,6 +232,8 @@ public class EntriesController {
             @RequestParam("tags") Optional<List<String>> tags,
             @Parameter(name = "logbooks", description = "Only include entries that belong to one of these logbooks")
             @RequestParam("logbooks") Optional<List<String>> logBooks,
+            @Parameter(name = "authors", description = "Only include entries that are authored by one of these users")
+            @RequestParam("authors") Optional<List<String>> authors,
             @Parameter(name = "sortByLogDate", description = "Sort entries by log date instead event date")
             @RequestParam(value = "sortByLogDate", defaultValue = "false") Optional<Boolean> sortByLogDate,
             @Parameter(name = "hideSummaries", description = "Hide the summaries from the search(default is false)")
@@ -255,6 +257,7 @@ public class EntriesController {
                                 .tags(tags.orElse(Collections.emptyList()))
                                 // if the logBooks is empty we should use all the authorized logbook
                                 .logbooks(authorizationCache.getRootUser()?logBooks.orElse(Collections.emptyList()):logBooks.orElse(authorizationCache.getAuthorizedLogbookId()))
+                                .authors(authors.orElse(null))
                                 .sortByLogDate(sortByLogDate.orElse(false))
                                 .hideSummaries(hideSummaries.orElse(false))
                                 .requireAllTags(requireAllTags.orElse(false))

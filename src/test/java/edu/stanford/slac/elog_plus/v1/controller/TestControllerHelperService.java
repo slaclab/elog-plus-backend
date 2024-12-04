@@ -628,7 +628,8 @@ public class TestControllerHelperService {
                 requireAllTags,
                 logBook,
                 sortByLogDate,
-                originId
+                originId,
+                Optional.empty()
         );
     }
 
@@ -646,9 +647,10 @@ public class TestControllerHelperService {
             Optional<String> search,
             Optional<List<String>> tags,
             Optional<Boolean> requireAllTags,
-            Optional<List<String>> logBook,
+            Optional<List<String>> logbook,
             Optional<Boolean> sortByLogDate,
-            Optional<String> originId) throws Exception {
+            Optional<String> originId,
+            Optional<List<String>> authors) throws Exception {
 
         MockHttpServletRequestBuilder getBuilder =
                 get("/v1/entries")
@@ -667,10 +669,15 @@ public class TestControllerHelperService {
             getBuilder.param("tags", tlArray);
         });
         requireAllTags.ifPresent(b -> getBuilder.param("requireAllTags", String.valueOf(b)));
-        logBook.ifPresent(logbook -> {
-            String[] lbArray = new String[logbook.size()];
-            logbook.toArray(lbArray);
+        logbook.ifPresent(l -> {
+            String[] lbArray = new String[l.size()];
+            l.toArray(lbArray);
             getBuilder.param("logbooks", lbArray);
+        });
+        authors.ifPresent(a -> {
+            String[] aArray = new String[a.size()];
+            a.toArray(aArray);
+            getBuilder.param("authors", aArray);
         });
         userInfo.ifPresent(login -> getBuilder.header(appProperties.getUserHeaderName(), jwtHelper.generateJwt(login)));
         impersonateUserInfo.ifPresent(impersonateUserId -> getBuilder.header(appProperties.getImpersonateHeaderName(), impersonateUserId));

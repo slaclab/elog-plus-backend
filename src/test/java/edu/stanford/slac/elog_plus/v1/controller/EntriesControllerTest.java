@@ -12,6 +12,7 @@ import edu.stanford.slac.elog_plus.model.Attachment;
 import edu.stanford.slac.elog_plus.model.Entry;
 import edu.stanford.slac.elog_plus.model.Logbook;
 import edu.stanford.slac.elog_plus.service.LogbookService;
+import edu.stanford.slac.elog_plus.service.SharedUtilityService;
 import edu.stanford.slac.elog_plus.utility.DateUtilities;
 import edu.stanford.slac.elog_plus.service.DocumentGenerationService;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -44,6 +45,7 @@ import java.util.Set;
 
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF;
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF_ID;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,6 +81,9 @@ public class EntriesControllerTest {
 
     @Autowired
     private DocumentGenerationService documentGenerationService;
+
+    @Autowired
+    private SharedUtilityService sharedUtilityService;
 
     @BeforeEach
     public void preTest() {
@@ -1284,6 +1289,141 @@ public class EntriesControllerTest {
         );
         assertThat(findTags).isNotNull();
         assertThat(findTags.getPayload().size()).isNotEqualTo(0);
+    }
+
+    @Test
+    public void searchByAuthor() {
+        var newLogbookResult = testControllerHelperService.getTestLogbook(mockMvc);
+        // set write permission to all
+        var updateResult = assertDoesNotThrow(
+                ()-> testControllerHelperService.updateLogbook(
+                mockMvc,
+                status().isOk(),
+                Optional.of("user1@slac.stanford.edu"),
+                newLogbookResult.getPayload().id(),
+                UpdateLogbookDTO
+                        .builder()
+                        .name(newLogbookResult.getPayload().name())
+                        .tags(emptyList())
+                        .shifts(emptyList())
+                        .writeAll(true)
+                        .build()
+                )
+        );
+        assertThat(updateResult).isNotNull();
+
+        // create the entry with different authors
+        for (int idx = 0; idx < 100; idx++) {
+            int finalIdx = idx;
+            ApiResultResponse<String> newLogID =
+                    assertDoesNotThrow(
+                            () -> testControllerHelperService.createNewLog(
+                                    mockMvc,
+                                    status().isCreated(),
+                                    Optional.of(
+                                            switch (finalIdx % 3) {
+                                                case 0 -> "user1@slac.stanford.edu";
+                                                case 1 -> "user2@slac.stanford.edu";
+                                                case 2 -> "user3@slac.stanford.edu";
+                                                default -> throw new IllegalStateException("Unexpected value: " + finalIdx % 3);
+                                            }
+                                    ),
+                                    EntryNewDTO
+                                            .builder()
+                                            .logbooks(Set.of(newLogbookResult.getPayload().id()))
+                                            .text("This is a log for test %d".formatted(finalIdx))
+                                            .note(String.valueOf(finalIdx))
+                                            .title("A very wonderful log for index %d".formatted(finalIdx))
+                                            .build()
+                            )
+                    );
+            AssertionsForClassTypes.assertThat(newLogID).isNotNull();
+        }
+
+        ApiResultResponse<List<EntrySummaryDTO>> findByAuthor1 = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(10),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of("user1@slac.stanford.edu"))
+                )
+        );
+        assertThat(findByAuthor1).isNotNull();
+        assertThat(findByAuthor1.getPayload()).isNotNull();
+        assertThat(findByAuthor1.getPayload().size()).isEqualTo(10);
+        AssertionsForClassTypes.assertThat(findByAuthor1.getPayload().stream().allMatch(
+                entry -> entry.loggedBy().compareToIgnoreCase(sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu").gecos())==0
+        )).isTrue();
+
+        ApiResultResponse<List<EntrySummaryDTO>> findByAuthor2 = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(10),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of("user2@slac.stanford.edu"))
+                )
+        );
+        assertThat(findByAuthor2).isNotNull();
+        assertThat(findByAuthor2.getPayload()).isNotNull();
+        assertThat(findByAuthor2.getPayload().size()).isEqualTo(10);
+        AssertionsForClassTypes.assertThat(findByAuthor2.getPayload().stream().allMatch(
+                entry -> entry.loggedBy().compareToIgnoreCase(sharedUtilityService.getPersonForEmail("user2@slac.stanford.edu").gecos())==0
+        )).isTrue();
+
+        ApiResultResponse<List<EntrySummaryDTO>> findByBothAuthor = assertDoesNotThrow(
+                () -> testControllerHelperService.submitSearchByGetWithAnchor(
+                        mockMvc,
+                        status().isOk(),
+                        Optional.of("user1@slac.stanford.edu"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(10),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(List.of("user1@slac.stanford.edu","user2@slac.stanford.edu"))
+                )
+        );
+        assertThat(findByBothAuthor).isNotNull();
+        assertThat(findByBothAuthor.getPayload()).isNotNull();
+        assertThat(findByBothAuthor.getPayload().size()).isEqualTo(10);
+        AssertionsForClassTypes.assertThat(findByBothAuthor.getPayload().stream().allMatch(
+                entry -> entry.loggedBy().compareToIgnoreCase(sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu").gecos())==0 ||
+                        entry.loggedBy().compareToIgnoreCase(sharedUtilityService.getPersonForEmail("user2@slac.stanford.edu").gecos())==0
+        )).isTrue();
     }
 
     @Test

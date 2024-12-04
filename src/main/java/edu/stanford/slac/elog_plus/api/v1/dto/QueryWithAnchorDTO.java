@@ -39,6 +39,8 @@ public record QueryWithAnchorDTO(
         List<String> tags,
         @Schema(description = "Only include entries that belong to one of these logbooks. If the list is empty mean tha user can read everywhere, if null the user is not authorized on any logbook")
         List<String> logbooks,
+        @Schema(description = "Only include entries that belong to one of these authors.")
+        List<String> authors,
         @Schema(description = "Sort by log date (the default is for event date)")
         Boolean sortByLogDate,
         @Schema(description = "Hide summaries from the query results")

@@ -395,6 +395,7 @@ public class EntriesControllerLogbookReadWriteAllTest {
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
+                        Optional.empty(),
                         Optional.empty()
                 )
         );

@@ -4,6 +4,7 @@ import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
 import edu.stanford.slac.elog_plus.model.Entry;
 import edu.stanford.slac.elog_plus.model.QueryParameterWithAnchor;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.*;
@@ -86,6 +87,13 @@ public class EntryRepositoryImpl implements EntryRepositoryCustom {
                     Criteria.where("summarizes").exists(false)
             );
         }
+
+        if(queryWithAnchor.getAuthors()!=null && !queryWithAnchor.getAuthors().isEmpty()) {
+            allCriteria.add(
+                    Criteria.where("userName").in(queryWithAnchor.getAuthors())
+            );
+        }
+
         // supersede criteria
         allCriteria.add(
                 Criteria.where("supersededBy").exists(false)
@@ -99,62 +107,73 @@ public class EntryRepositoryImpl implements EntryRepositoryCustom {
                         && queryWithAnchor.getContextSize() > 0
                         && queryWithAnchor.getAnchorID() != null
         ) {
-            List<Criteria> localAllCriteria = allCriteria;
-            Query q = getDefaultQuery(queryWithAnchor.getSearch());
-            q.addCriteria(
-                    Criteria.where(
-                            getSortedField(queryWithAnchor)
-                    ).gte(
-                            getAnchorValueDate(queryWithAnchor, anchorEntry)
-                    )
-            );
-            applyDateCriteriaForContextEntries(localAllCriteria, queryWithAnchor);
-            q.addCriteria(
-                    // all general criteria
-                    new Criteria().andOperator(
-                            localAllCriteria
-                    )
-
-            ).with(
-                    Sort.by(
-                            Sort.Direction.ASC, getSortedField(queryWithAnchor))
-            ).limit(queryWithAnchor.getContextSize());
-            logsBeforeAnchor.addAll(mongoTemplate.find(
-                            q,
-                            Entry.class
-                    )
-            );
-            Collections.reverse(logsBeforeAnchor);
+            getEntriesBeforeAnchor(queryWithAnchor, allCriteria, anchorEntry, logsBeforeAnchor);
         }
 
         if (queryWithAnchor.getLimit() != null && queryWithAnchor.getLimit() > 0) {
-            List<Criteria> localAllCriteria = allCriteria;
-            Query q = getDefaultQuery(queryWithAnchor.getSearch());
-            applyDateCriteriaForLimitEntries(localAllCriteria, queryWithAnchor);
-            if(anchorEntry != null) {
-                q.addCriteria(
-                        Criteria.where(
-                                getSortedField(queryWithAnchor)
-                        ).lt(
-                                getAnchorValueDate(queryWithAnchor, anchorEntry)
-                        )
-                );
-            }
-            q.addCriteria(new Criteria().andOperator(
-                    localAllCriteria
-                    )
-            ).with(
-                    Sort.by(
-                            Sort.Direction.DESC, getSortedField(queryWithAnchor))
-            ).limit(queryWithAnchor.getLimit());
-            logsAfterAnchor = mongoTemplate.find(
-                    q,
-                    Entry.class
-            );
+            logsAfterAnchor = getEntriesAfterAnchor(queryWithAnchor, allCriteria, anchorEntry);
         }
 
         logsBeforeAnchor.addAll(logsAfterAnchor);
         return logsBeforeAnchor;
+    }
+
+    @NotNull
+    private List<Entry> getEntriesAfterAnchor(QueryParameterWithAnchor queryWithAnchor, List<Criteria> allCriteria, Entry anchorEntry) {
+        List<Entry> logsAfterAnchor;
+        List<Criteria> localAllCriteria = allCriteria;
+        Query q = getDefaultQuery(queryWithAnchor.getSearch());
+        applyDateCriteriaForLimitEntries(localAllCriteria, queryWithAnchor);
+        if(anchorEntry != null) {
+            q.addCriteria(
+                    Criteria.where(
+                            getSortedField(queryWithAnchor)
+                    ).lt(
+                            getAnchorValueDate(queryWithAnchor, anchorEntry)
+                    )
+            );
+        }
+        q.addCriteria(new Criteria().andOperator(
+                localAllCriteria
+                )
+        ).with(
+                Sort.by(
+                        Sort.Direction.DESC, getSortedField(queryWithAnchor))
+        ).limit(queryWithAnchor.getLimit());
+        logsAfterAnchor = mongoTemplate.find(
+                q,
+                Entry.class
+        );
+        return logsAfterAnchor;
+    }
+
+    private void getEntriesBeforeAnchor(QueryParameterWithAnchor queryWithAnchor, List<Criteria> allCriteria, Entry anchorEntry, List<Entry> logsBeforeAnchor) {
+        List<Criteria> localAllCriteria = allCriteria;
+        Query q = getDefaultQuery(queryWithAnchor.getSearch());
+        q.addCriteria(
+                Criteria.where(
+                        getSortedField(queryWithAnchor)
+                ).gte(
+                        getAnchorValueDate(queryWithAnchor, anchorEntry)
+                )
+        );
+        applyDateCriteriaForContextEntries(localAllCriteria, queryWithAnchor);
+        q.addCriteria(
+                // all general criteria
+                new Criteria().andOperator(
+                        localAllCriteria
+                )
+
+        ).with(
+                Sort.by(
+                        Sort.Direction.ASC, getSortedField(queryWithAnchor))
+        ).limit(queryWithAnchor.getContextSize());
+        logsBeforeAnchor.addAll(mongoTemplate.find(
+                        q,
+                        Entry.class
+                )
+        );
+        Collections.reverse(logsBeforeAnchor);
     }
 
     @Override

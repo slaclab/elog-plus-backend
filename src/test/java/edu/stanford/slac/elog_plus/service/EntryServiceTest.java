@@ -9,6 +9,8 @@ import edu.stanford.slac.elog_plus.api.v1.dto.*;
 import edu.stanford.slac.elog_plus.config.ELOGAppProperties;
 import edu.stanford.slac.elog_plus.exception.EntryNotFound;
 import edu.stanford.slac.elog_plus.exception.ShiftNotFound;
+import edu.stanford.slac.elog_plus.migration.M001_InitEntryIndex;
+import edu.stanford.slac.elog_plus.migration.M011_CreateIndexForAuthorSearchOnEntry;
 import edu.stanford.slac.elog_plus.model.Attachment;
 import edu.stanford.slac.elog_plus.model.Entry;
 import edu.stanford.slac.elog_plus.model.FileObjectDescription;
@@ -119,7 +121,7 @@ public class EntryServiceTest {
                     .filter(existingTopics::contains)
                     .forEach(topic -> {
                         try {
-                            adminClient.deleteTopics(Collections.singletonList(topic)).all().get();
+                            adminClient.deleteTopics(singletonList(topic)).all().get();
                         } catch (Exception e) {
                             System.err.println("Failed to delete topic " + topic + ": " + e.getMessage());
                         }
@@ -128,6 +130,11 @@ public class EntryServiceTest {
             throw new RuntimeException("Failed to recreate Kafka topic", e);
         }
 
+        // add entry indexes
+        M001_InitEntryIndex entryIndex = new M001_InitEntryIndex(mongoTemplate);
+        assertDoesNotThrow(entryIndex::changeSet);
+        M011_CreateIndexForAuthorSearchOnEntry entryAuthorIndex = new M011_CreateIndexForAuthorSearchOnEntry(mongoTemplate);
+        assertDoesNotThrow(entryAuthorIndex::changeSet);
         // reset fake mail server
         greenMail.reset();
     }
@@ -181,7 +188,7 @@ public class EntryServiceTest {
         // check that email has been sent
         assertThat(greenMail.waitForIncomingEmail(5000, 2)).isTrue();
         Message[] messages = greenMail.getReceivedMessages();
-        AssertionsForClassTypes.assertThat(messages.length).isEqualTo(2);
+        assertThat(messages.length).isEqualTo(2);
     }
 
     @Test
@@ -2374,5 +2381,86 @@ public class EntryServiceTest {
                 )
         );
 
+    }
+
+
+    @Test
+    public void findByAuthor() {
+        var logbookTest = getTestLogbook();
+        // create the entry with different authors
+        for (int idx = 0; idx < 100; idx++) {
+            int finalIdx = idx;
+            assertDoesNotThrow(
+                    () -> entryService.createNew(
+                            EntryNewDTO
+                                    .builder()
+                                    .logbooks(Set.of(logbookTest.id()))
+                                    .text("This is a log for test %d".formatted(finalIdx))
+                                    .title("A very wonderful log %d".formatted(finalIdx))
+                                    .build(),
+                            switch (finalIdx % 3) {
+                                case 0 -> sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu");
+                                case 1 -> sharedUtilityService.getPersonForEmail("user2@slac.stanford.edu");
+                                case 2 -> sharedUtilityService.getPersonForEmail("user3@slac.stanford.edu");
+                                default -> throw new IllegalStateException("Unexpected value: " + finalIdx % 3);
+                            }
+
+                    )
+            );
+        }
+
+        // find all entries that has been authored by user1
+        List<EntrySummaryDTO> foundForAuthorUser1 = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .authors(List.of("user1@slac.stanford.edu"))
+                                .build()
+                )
+        );
+        assertThat(foundForAuthorUser1).isNotNull().hasSize(10);
+        // check every entry belong to the same user
+        for (EntrySummaryDTO entry :
+                foundForAuthorUser1) {
+            assertThat(entry.loggedBy()).isEqualTo(sharedUtilityService.getPersonForEmail("user1@slac.stanford.edu").gecos());
+        }
+
+        // find all entries that has been authored by user2
+        List<EntrySummaryDTO> foundForAuthorUser2 = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .authors(List.of("user2@slac.stanford.edu"))
+                                .build()
+                )
+        );
+        assertThat(foundForAuthorUser2).isNotNull().hasSize(10);
+        // check every entry belong to the same user
+        for (EntrySummaryDTO entry :
+                foundForAuthorUser2) {
+            assertThat(entry.loggedBy()).isEqualTo(sharedUtilityService.getPersonForEmail("user2@slac.stanford.edu").gecos());
+        }
+
+        // find all entries that has been authored by user1
+        List<EntrySummaryDTO> foundForAuthorUser3 = assertDoesNotThrow(
+                () -> entryService.findAll(
+                        QueryWithAnchorDTO
+                                .builder()
+                                .limit(10)
+                                .logbooks(emptyList())
+                                .authors(List.of("user3@slac.stanford.edu"))
+                                .build()
+                )
+        );
+        assertThat(foundForAuthorUser3).isNotNull().hasSize(10);
+        // check every entry belong to the same user
+        for (EntrySummaryDTO entry :
+                foundForAuthorUser3) {
+            assertThat(entry.loggedBy()).isEqualTo(sharedUtilityService.getPersonForEmail("user3@slac.stanford.edu").gecos());
+        }
     }
 }

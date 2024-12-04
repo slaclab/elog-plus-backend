@@ -29,6 +29,8 @@ public class QueryParameterWithAnchor {
     @Builder.Default
     List<String> logbooks = Collections.emptyList();
     @Builder.Default
+    List<String> authors = Collections.emptyList();
+    @Builder.Default
     private Boolean sortByLogDate = false;
     @Builder.Default
     private Boolean hideSummaries = false;
