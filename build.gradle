@@ -26,6 +26,8 @@ springBoot {
     buildInfo {
         {
             properties {
+                version = project.version // Set the version dynamically from the project.version property
+                group = project.group // Include the group property if needed
                 additional = [
                         'ad-eed-baselib'     : "${project.ext.ad_eed_baselib_version}",
                         'ad-eed-base-mongodb': "${project.ext.ad_eed_base_mongodb_lib_version}"
