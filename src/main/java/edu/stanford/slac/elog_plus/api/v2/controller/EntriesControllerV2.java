@@ -36,7 +36,7 @@ public class EntriesControllerV2 {
     @PreAuthorize("@baseAuthorizationService.checkAuthenticated(#authentication) and @entryAuthorizationService.canCreateNewEntry(#authentication, #newEntry)")
     public ApiResultResponse<String> newEntryWithAttachment(
             Authentication authentication,
-            @Parameter(schema = @Schema(type = "string", implementation = EntryNewDTO.class))
+            @Parameter(schema = @Schema(type = "string", implementation = NewEntryDTO.class))
             @RequestPart(value = "entry") @Valid NewEntryDTO newEntry,
             @RequestPart(value = "files", required = false)
             MultipartFile[] files
