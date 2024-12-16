@@ -4,6 +4,7 @@ import edu.stanford.slac.ad.eed.baselib.api.v1.dto.ApiResultResponse;
 import edu.stanford.slac.ad.eed.baselib.exception.NotAuthorized;
 import edu.stanford.slac.ad.eed.baselib.service.AuthService;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
+import edu.stanford.slac.elog_plus.api.v2.dto.NewEntryDTO;
 import edu.stanford.slac.elog_plus.exception.LogbookNotAuthorized;
 import edu.stanford.slac.elog_plus.exception.ResourceNotFound;
 import edu.stanford.slac.elog_plus.service.EntryService;
@@ -18,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -55,6 +57,47 @@ public class EntryAuthorizationService {
                         (
                                 // this creates a list of supplier that return true if the user is authorized on logbook or if the logbook is public writable
                                 newEntry.logbooks().stream()
+                                        .map
+                                                (
+                                                        // return true if the user is authorized on logbook or if the logbook is public writable
+                                                        logbookId -> (Supplier<Boolean>) () ->
+                                                                any(
+                                                                        () -> authService.checkAuthorizationForOwnerAuthTypeAndResourcePrefix(
+                                                                                authentication,
+                                                                                Write,
+                                                                                "/logbook/%s".formatted(logbookId)
+                                                                        ),
+                                                                        () -> allPublicWritableLogbookIds.contains(logbookId)
+                                                                )
+                                                )
+                                        .toList()
+                        )
+        );
+        return true;
+    }
+
+    /**
+     * Check if the user can create new entry
+     *
+     * @param authentication the authentication object
+     * @param newEntry       the entry to create
+     * @return true if the user can create the entry
+     */
+    public boolean canCreateNewEntry(Authentication authentication, @Valid NewEntryDTO newEntry) {
+        List<String> allPublicWritableLogbookIds = logbookService.getAllIdsWriteAll();
+        Set<String> requestedLogbookIds = logbookService.getLogbooksIdByNames(newEntry.logbooks());
+        // check authenticated
+        assertion(
+                NotAuthorized
+                        .notAuthorizedBuilder()
+                        .errorCode(-1)
+                        .errorDomain("EntryAuthorizationService::canCreateNewEntry")
+                        .build(),
+                // can write to all logbook
+                () -> all
+                        (
+                                // this creates a list of supplier that return true if the user is authorized on logbook or if the logbook is public writable
+                                requestedLogbookIds.stream()
                                         .map
                                                 (
                                                         // return true if the user is authorized on logbook or if the logbook is public writable
@@ -305,7 +348,7 @@ public class EntryAuthorizationService {
                         .errorDomain("EntryAuthorizationService::canSearchEntry")
                         .build(),
                 // need to be authenticated
-                ()->authService.checkAuthentication(authentication)
+                () -> authService.checkAuthentication(authentication)
         );
 
         authorizationCache.setRootUser(authService.checkForRoot(authentication));
@@ -354,7 +397,7 @@ public class EntryAuthorizationService {
                         .toList();
             }
 
-            if(!authorizedLogbook.isEmpty()) {
+            if (!authorizedLogbook.isEmpty()) {
                 // cache the found authorized logbook
                 authorizationCache.setAuthorizedLogbookId(authorizedLogbook);
             }

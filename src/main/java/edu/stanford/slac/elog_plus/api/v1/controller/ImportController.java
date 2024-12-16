@@ -37,9 +37,7 @@ import static edu.stanford.slac.ad.eed.baselib.exception.Utility.*;
 @AllArgsConstructor
 @Schema(description = "Main set of api for inject data into ELog system")
 public class ImportController {
-    AuthService authService;
     ImportService importService;
-    LogbookService logbookService;
     @PostMapping(
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
@@ -102,4 +100,6 @@ public class ImportController {
                                 )
                 );
     }
+
+
 }

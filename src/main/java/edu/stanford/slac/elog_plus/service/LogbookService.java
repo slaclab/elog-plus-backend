@@ -87,6 +87,29 @@ public class LogbookService {
      *
      * @return the lis tof all logbooks
      */
+    public Set<String> getLogbooksIdByNames(Set<String> list) {
+        Set<String> ids = new HashSet<>();
+        if(list == null) return ids;
+        list.forEach(
+                s -> {
+                    Logbook lb = logbookRepository.findByName(s).orElseThrow(
+                            () -> LogbookNotFound.logbookNotFoundBuilderWitLId()
+                                    .errorCode(-1)
+                                    .logbookId(s)
+                                    .errorDomain("LogbookService:getLogbooksIdByNames")
+                                    .build()
+                    );
+                    ids.add(lb.getId());
+                }
+        );
+        return ids;
+    }
+
+    /**
+     * Return all the logbooks
+     *
+     * @return the lis tof all logbooks
+     */
     public List<String> getAllIdsWriteAll() {
         return wrapCatch(
                 () -> logbookRepository.findAllByWriteAllIsTrue().stream().map(Logbook::getId).toList(),
@@ -733,6 +756,47 @@ public class LogbookService {
             result.addAll(lbDTO.tags());
         }
         return result;
+    }
+
+
+    /**
+     * Return the list of tags ids that belong to each logbook,
+     * if a tag is not found an exception is thrown
+     *
+     * @param tagNameList the list of tag names
+     * @param logbooksIds the list of logbooks ids
+     * @return the list of tags ids
+     */
+    public Set<String> getTagsIdsByNameThatBelongToEachLogbook(Set<String> tagNameList, Set<String> logbooksIds) {
+        if(logbooksIds == null || tagNameList == null) return Collections.emptySet();
+        Set<String> tagIds = new HashSet<>();
+        logbooksIds.forEach(
+                lbId -> {
+                    Logbook lb = logbookRepository.findById(lbId).orElseThrow(
+                            () -> LogbookNotFound.logbookNotFoundBuilderWitLId()
+                                    .errorCode(-1)
+                                    .logbookId(lbId)
+                                    .errorDomain("LogbookService:getTagsIdsByNameThatBelongToEachLogbook")
+                                    .build()
+                    );
+                    tagNameList.forEach(
+                            tagName -> {
+                                Tag tag = lb.getTags().stream().filter(
+                                        t -> t.getName().compareTo(tagName) == 0
+                                ).findFirst().orElseThrow(
+                                        () -> TagNotFound.tagNotFoundBuilder()
+                                                .errorCode(-1)
+                                                .tagName(tagName)
+                                                .errorDomain("LogbookService:getTagsIdsByNameThatBelongToEachLogbook")
+                                                .build()
+                                );
+
+                                tagIds.add(tag.getId());
+                            }
+                    );
+                }
+        );
+        return tagIds;
     }
 
     /**

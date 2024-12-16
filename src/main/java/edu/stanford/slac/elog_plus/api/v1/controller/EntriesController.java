@@ -3,13 +3,14 @@ package edu.stanford.slac.elog_plus.api.v1.controller;
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.ApiResultResponse;
 import edu.stanford.slac.ad.eed.baselib.api.v1.dto.PersonDTO;
 import edu.stanford.slac.ad.eed.baselib.config.AppProperties;
+import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
 import edu.stanford.slac.ad.eed.baselib.service.AuthService;
 import edu.stanford.slac.ad.eed.baselib.service.PeopleGroupService;
-import edu.stanford.slac.elog_plus.api.v1.dto.EntryDTO;
-import edu.stanford.slac.elog_plus.api.v1.dto.EntryNewDTO;
-import edu.stanford.slac.elog_plus.api.v1.dto.EntrySummaryDTO;
-import edu.stanford.slac.elog_plus.api.v1.dto.QueryWithAnchorDTO;
+import edu.stanford.slac.elog_plus.api.v1.dto.*;
+import edu.stanford.slac.elog_plus.model.FileObjectDescription;
+import edu.stanford.slac.elog_plus.service.AttachmentService;
 import edu.stanford.slac.elog_plus.service.EntryService;
+import edu.stanford.slac.elog_plus.service.EntrySimplifiedService;
 import edu.stanford.slac.elog_plus.service.LogbookService;
 import edu.stanford.slac.elog_plus.service.authorization.AuthorizationCache;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,26 +19,30 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static edu.stanford.slac.ad.eed.baselib.api.v1.dto.AuthorizationTypeDTO.Read;
 
+@Log4j2
 @RestController()
 @RequestMapping("/v1/entries")
 @AllArgsConstructor
 @Schema(description = "Main set of api for the query on the log entries")
 public class EntriesController {
+    final private EntrySimplifiedService entrySimplifiedService;
     final private PeopleGroupService peopleGroupService;
     final private AuthService authService;
     final private EntryService entryService;

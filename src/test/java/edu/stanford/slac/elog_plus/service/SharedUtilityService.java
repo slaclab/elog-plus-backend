@@ -9,21 +9,22 @@ import edu.stanford.slac.ad.eed.baselib.service.PeopleGroupService;
 import edu.stanford.slac.elog_plus.api.v1.dto.NewLogbookDTO;
 import edu.stanford.slac.elog_plus.service.LogbookService;
 import jakarta.validation.constraints.NotNull;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF;
 import static edu.stanford.slac.elog_plus.api.v1.mapper.EntryMapper.ELOG_ENTRY_REF_ID;
@@ -42,6 +43,10 @@ public class SharedUtilityService {
     private AuthService authService;
     @Autowired
     private PeopleGroupService peopleGroupService;
+    @Value("${edu.stanford.slac.elog-plus.image-preview-topic}")
+    private String imagePreviewTopic;
+    @Autowired
+    private KafkaAdmin kafkaAdmin;
 
     /**
      * Create a default group for testing
@@ -201,5 +206,29 @@ public class SharedUtilityService {
             break;
         }
         return found;
+    }
+
+    public void cleanKafkaPreviewTopic() {
+        try (AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
+            Set<String> existingTopics = adminClient.listTopics().names().get();
+            List<String> topicsToDelete = List.of(
+                    imagePreviewTopic,
+                    String.format("%s-retry-2000", imagePreviewTopic),
+                    String.format("%s-retry-4000", imagePreviewTopic)
+            );
+
+            // Delete topics that actually exist
+            topicsToDelete.stream()
+                    .filter(existingTopics::contains)
+                    .forEach(topic -> {
+                        try {
+                            adminClient.deleteTopics(Collections.singletonList(topic)).all().get();
+                        } catch (Exception e) {
+                            System.err.println("Failed to delete topic " + topic + ": " + e.getMessage());
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to recreate Kafka topic", e);
+        }
     }
 }

@@ -12,8 +12,10 @@ import edu.stanford.slac.ad.eed.baselib.exception.ControllerLogicException;
 import edu.stanford.slac.elog_plus.api.v1.dto.*;
 import edu.stanford.slac.elog_plus.api.v1.dto.NewAuthorizationDTO;
 import edu.stanford.slac.elog_plus.api.v2.dto.ImportEntryDTO;
+import edu.stanford.slac.elog_plus.api.v2.dto.NewEntryDTO;
 import edu.stanford.slac.elog_plus.service.LogbookService;
 import edu.stanford.slac.elog_plus.service.SharedUtilityService;
+import jakarta.validation.Valid;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.springframework.http.MediaType;
@@ -362,6 +364,46 @@ public class TestControllerHelperService {
         }
         userInfo.ifPresent(login -> multiPartBuilder.header(appProperties.getUserHeaderName(), jwtHelper.generateJwt(login)));
 
+        MvcResult result = mockMvc.perform(
+                        multiPartBuilder
+                )
+                .andExpect(resultMatcher)
+                .andReturn();
+        if (result.getResolvedException() != null) {
+            throw result.getResolvedException();
+        }
+        return new ObjectMapper().readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+    }
+
+    public ApiResultResponse<String> v2EntriesControllerCreateEntry(
+            MockMvc mockMvc,
+            ResultMatcher resultMatcher,
+            Optional<String> userInfo,
+            @Valid NewEntryDTO newEntryDTO,
+            MockMultipartFile... files) throws Exception {
+        MockMultipartHttpServletRequestBuilder multiPartBuilder = multipart("/v2/entries");
+        userInfo.ifPresent(login -> multiPartBuilder.header(appProperties.getUserHeaderName(), jwtHelper.generateJwt(login)));
+        if (newEntryDTO != null) {
+            MockPart p = new MockPart(
+                    "entry",
+                    new ObjectMapper().writeValueAsString(newEntryDTO).getBytes(StandardCharsets.UTF_8)
+            );
+            p.getHeaders().add(
+                    "Content-Type",
+                    MediaType.APPLICATION_JSON_VALUE
+            );
+            multiPartBuilder.part(
+                    p
+            );
+        }
+
+        for (MockMultipartFile a :
+                files) {
+            multiPartBuilder.file(a);
+        }
         MvcResult result = mockMvc.perform(
                         multiPartBuilder
                 )

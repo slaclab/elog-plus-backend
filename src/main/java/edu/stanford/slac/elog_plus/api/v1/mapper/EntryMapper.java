@@ -215,6 +215,4 @@ public abstract class EntryMapper {
         }
         return list;
     }
-
-
 }
